@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import const
 from tasks import submit_node_task
 
 app = Flask(__name__)
@@ -49,4 +50,5 @@ def handle_task():
 
 
 if __name__ == "__main__":
-    app.run(host="10.81.24.1", debug=True)
+    app.config["DEBUG"] = const.DEBUG
+    app.run(debug=const.DEBUG, host=const.HOST, port=const.PORT)

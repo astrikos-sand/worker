@@ -1,0 +1,12 @@
+services:
+  worker:
+    container_name: astrikos_worker
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    image: astrikos_worker
+    env_file: .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/astrikos-worker/
