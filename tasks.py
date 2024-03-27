@@ -25,13 +25,13 @@ def execute_node(node, nodes_dict):
         node_executor = NodeExecutor(
             node_type=node.get("node_type", None), id=node.get("id")
         )
-        
+
         special_slots = node.get("special_slots", [])
         if special_slots:
             for special_slot in special_slots:
                 if special_slot.get("speciality") == "DB":
                     inputs.update({special_slot.get("name"): DB()})
-                    
+
         outputs = node_executor.execute(globals, inputs, **node)
 
         with node_dict_lock:

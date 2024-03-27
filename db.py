@@ -7,7 +7,6 @@ class DBModel:
         self.name = name
         self.backend = Backend()
 
-
     def get(self, **kwargs) -> dict:
         id = kwargs.get("id", None)
         if id is None:
