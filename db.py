@@ -1,11 +1,12 @@
-from backend import Backend
+from api import API
+from const import BACKEND_URL
 
 
 class DBModel:
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.backend = Backend()
+        self.backend = API(base_url=BACKEND_URL)
 
     def get(self, **kwargs) -> dict:
         id = kwargs.get("id", None)

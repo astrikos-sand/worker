@@ -1,16 +1,14 @@
 import requests
 
-from constants import BACKEND_URL
 
+class API:
 
-class Backend:
-
-    def __init__(self):
-        self.backend_url = BACKEND_URL
+    def __init__(self, base_url: str):
+        self.base_url = base_url
 
     def get(self, url: str) -> str:
         try:
-            response = requests.get(f"{self.backend_url}{url}")
+            response = requests.get(f"{self.base_url}{url}")
             if response.status_code < 200 and response.status_code >= 300:
                 raise Exception(f"error: {response.json()}")
             return response.json()
@@ -19,7 +17,7 @@ class Backend:
 
     def post(self, url: str, data: dict) -> str:
         try:
-            response = requests.post(f"{self.backend_url}{url}", json=data)
+            response = requests.post(f"{self.base_url}{url}", json=data)
             if response.status_code < 200 and response.status_code >= 300:
                 raise Exception(f"error: {response.json()}")
             return response.json()
@@ -28,7 +26,7 @@ class Backend:
 
     def put(self, url: str, data: dict) -> str:
         try:
-            response = requests.patch(f"{self.backend_url}{url}", json=data)
+            response = requests.patch(f"{self.base_url}{url}", json=data)
             if response.status_code < 200 and response.status_code >= 300:
                 raise Exception(f"error: {response.json()}")
             return response.json()
@@ -37,7 +35,7 @@ class Backend:
 
     def delete(self, url: str) -> str:
         try:
-            response = requests.delete(f"{self.backend_url}{url}")
+            response = requests.delete(f"{self.base_url}{url}")
             if response.status_code < 200 and response.status_code >= 300:
                 raise Exception(f"error: {response.json()}")
             return response.json()

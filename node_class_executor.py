@@ -1,12 +1,8 @@
-from strenum import StrEnum
 import requests
+from app_enums import NODE_CLASS_ENUM
 
 
 class NodeClassExecutor:
-
-    class NODE_CLASS_ENUM(StrEnum):
-        GENERIC_NODE_CLASS = "GenericNodeClass"
-        TRIGGER_NODE_CLASS = "TriggerNodeClass"
 
     def __init__(self, node_class_type: NODE_CLASS_ENUM, node_id: str):
         self.node_class_type = node_class_type
@@ -29,5 +25,6 @@ class NodeClassExecutor:
                 f"Code is required for execution in a node class: {self.node_class_type} and node id: {self.node_id}"
             )
         code_text = self.read_online_file(code)
+        print("code text:", code_text, flush=True)
         exec(code_text, globals, locals)
         return locals
