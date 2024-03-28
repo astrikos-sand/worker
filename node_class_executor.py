@@ -19,7 +19,6 @@ class NodeClassExecutor:
 
     def execute(self, globals, locals, **kwargs):
         code = kwargs.get("code", None)
-
         if code is None:
             raise Exception(
                 f"Code is required for execution in a node class: {self.node_class_type} and node id: {self.node_id}"

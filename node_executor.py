@@ -91,12 +91,13 @@ class NodeExecutor:
             )
         except Exception as e:
             raise Exception(
-                f'Error in executing generic node with node_class_type: {kwargs.get("node_class_type", None)}, error: {str(e)}'
+                f'Error in executing generic node with node_class_type: {kwargs.get("node_class_type", None)}, node id{self.id}, error: {str(e)}'
             )
 
         if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and not triggered:
             output_slots = output_slots.copy()
-            output_slots.remove("data")
+            if 'data' in output_slots:
+                output_slots.remove("data")
 
         for slot in output_slots:
             if slot in locals:
