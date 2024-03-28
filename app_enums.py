@@ -29,6 +29,7 @@ class DATA_TYPE(StrEnum):
     SET = ("SET",)
     TUPLE = ("TUPLE",)
     DICTIONARY = "DICT"
+    NONE = "NONE"
 
 
 class NODE_ENUM(StrEnum):

@@ -46,6 +46,8 @@ class NodeExecutor:
                     return tuple(value)
                 case DATA_TYPE.DICTIONARY:
                     return dict(value)
+                case DATA_TYPE.NONE:
+                    return None
                 case default:
                     raise Exception(f"Invalid type for DataNode (id: {self.id}")
 
