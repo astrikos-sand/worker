@@ -33,11 +33,12 @@ def handle_task():
             # If normal execution then find all nodes with no input slots
             if type == SUBMIT_TASK_TYPE.NORMAL:
                 slots = node.get("input_slots", None)
+                target_connections = node.get("target_connections", [])
 
                 if slots is None:
                     raise Exception(f"Input slots is null for node: {node_id}")
 
-                if len(slots) == 0:
+                if len(slots) == 0 and len(target_connections) == 0:
                     start_nodes.append(node_id)
 
         # if triggered execution then find the trigger node and start execution from there
@@ -45,15 +46,15 @@ def handle_task():
         # also store any data recieved into triggered_data field
         triggered = False
         if type == SUBMIT_TASK_TYPE.TRIGGERED:
-            trigger_node = data.get("trigger_node", None)
+            trigger_node_id = data.get("trigger_node", None)
             triggered = True
             data = data.get("data", None)
-            if trigger_node is None:
+            if trigger_node_id is None:
                 raise Exception("Trigger node is required for triggered task")
-            start_nodes = [trigger_node.id]
+            start_nodes = [trigger_node_id]
             # add triggered_data to trigger node
             if data:
-                nodes_dict.setdefault(trigger_node.id, {}).update(
+                nodes_dict.setdefault(trigger_node_id, {}).update(
                     {"triggered_data": data}
                 )
 
@@ -66,7 +67,14 @@ def handle_task():
         return {"error": str(e), "success": False}
 
     node_outputs = {
-        node_id: {"outputs": nodes_dict.get(node_id).get("outputs", {})}
+        node_id: {
+            "outputs": nodes_dict.get(node_id).get(
+                "outputs",
+                {
+                    "details": "No outputs found, it seems this node is scheduled to run in future."
+                },
+            )
+        }
         for node_id in nodes_dict
     }
     return {"success": True, "outputs": node_outputs}

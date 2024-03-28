@@ -15,6 +15,7 @@ speciality_input = {
     SLOT_SPECIALITY.DATABASE: DB(),
     SLOT_SPECIALITY.API: API,
     SLOT_SPECIALITY.BACKEND: API(base_url=BACKEND_URL),
+    SLOT_SPECIALITY.NODE_ID: None,
 }
 
 
@@ -39,20 +40,20 @@ def execute_node(node, nodes_dict, triggered=False):
         # update all special slots with input speciality
         if special_slots:
             for special_slot in special_slots:
-                if (
-                    special_slot.get("attachment_type", None)
-                    == SLOT_ATTACHMENT_TYPE.INPUT
-                ):
-                    inputs.update(
-                        {
-                            special_slot.get("name"): speciality_input.get(
-                                special_slot.get("speciality", None)
+                speciality = special_slot.get("speciality", None)
+                name = special_slot.get("name", None)
+                attachment_type = special_slot.get("attachment_type", None)
+                if attachment_type == SLOT_ATTACHMENT_TYPE.INPUT:
+                    match speciality:
+                        case SLOT_SPECIALITY.NODE_ID:
+                            inputs.update({name: node.get("id")})
+                        case default:
+                            inputs.update(
+                                {name: speciality_input.get(speciality, None)}
                             )
-                        }
-                    )
 
         outputs = node_executor.execute(globals, inputs, triggered=triggered, **node)
-
+        print("outputs:", outputs, flush=True)
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
         # for all output parameters, update the parameter map and submit the child nodes for execution

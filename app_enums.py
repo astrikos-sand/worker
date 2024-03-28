@@ -15,6 +15,7 @@ class SLOT_SPECIALITY(StrEnum):
     DATABASE = "DB"
     API = "API"
     BACKEND = "BACKEND"
+    NODE_ID = "NODE_ID"
     SIGNAL = "SIG"
     NONE = "NONE"
 
