@@ -9,7 +9,6 @@ class NodeExecutor:
         self.id = id
 
     def execute(self, globals, locals, **kwargs):
-        print("Executing node:", self.id, "with type:", self.node_type, flush=True)
         match self.node_type:
             case NODE_ENUM.DATA_NODE:
                 return self.execute_data_node(globals, locals, **kwargs)
@@ -56,11 +55,8 @@ class NodeExecutor:
 
     # execute the generic node
     def execute_generic_node(self, globals, locals, **kwargs):
-        print("Executing generic node:", self.id, locals, globals, flush=True)
         node_class_type: NODE_CLASS_ENUM = kwargs.get("node_class_type", None)
-        print("node_class_type:", node_class_type, flush=True)
         triggered = kwargs.get("triggered", False)
-        print("triggered:", triggered, flush=True)
 
         outputs = {}
         output_slots = kwargs.get("output_slots", [])
@@ -78,7 +74,6 @@ class NodeExecutor:
                             f"Output slot 'data' is required for Webhook triggered node: {self.id}"
                         )
                     outputs.update({"data": data})
-                    print("outputs before return:", outputs, flush=True)
                     return outputs
 
                 # Trigger Node class with name 'PeriodicTriggerNode'
@@ -108,5 +103,4 @@ class NodeExecutor:
                 raise ValueError(
                     f"Slot is not found in function output, check values returned by function for node: {self.id}"
                 )
-        print("outputs before return:", outputs, flush=True)
         return outputs

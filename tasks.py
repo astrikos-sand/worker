@@ -21,7 +21,6 @@ speciality_input = {
 
 def execute_node(node, nodes_dict, triggered=False):
     # fetch parameters
-    print("node:", node.get("id"), "triggered", triggered, flush=True)
     inputs = parameter_map.get(node.get("id"), {})  # id is non nullable
     input_slots = node.get("input_slots")  # input slot is non nullable
 
@@ -53,7 +52,6 @@ def execute_node(node, nodes_dict, triggered=False):
                             )
 
         outputs = node_executor.execute(globals, inputs, triggered=triggered, **node)
-        print("outputs:", outputs, flush=True)
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
         # for all output parameters, update the parameter map and submit the child nodes for execution
