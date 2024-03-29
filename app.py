@@ -71,6 +71,9 @@ def handle_task():
 
     node_outputs = {
         node_id: {
+            "node_type": nodes_dict.get(node_id).get("node_type", None),
+            "node_class_type": nodes_dict.get(node_id).get("node_class_type", None),
+            "node_class_name": nodes_dict.get(node_id).get("node_class_name", None),
             "outputs": nodes_dict.get(node_id).get(
                 "outputs",
                 {

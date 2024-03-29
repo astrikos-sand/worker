@@ -12,10 +12,10 @@ lock = Lock()
 node_dict_lock = Lock()
 
 speciality_input = {
-    SLOT_SPECIALITY.DATABASE: DB(),
-    SLOT_SPECIALITY.API: API,
-    SLOT_SPECIALITY.BACKEND: API(base_url=BACKEND_URL),
-    SLOT_SPECIALITY.NODE_ID: None,
+    SLOT_SPECIALITY.DATABASE: lambda: DB(),
+    SLOT_SPECIALITY.API: lambda: API,
+    SLOT_SPECIALITY.BACKEND: lambda: API(base_url=BACKEND_URL),
+    SLOT_SPECIALITY.NODE_ID: lambda: None,
 }
 
 
@@ -51,10 +51,17 @@ def execute_node(node, nodes_dict, triggered=False):
                     match speciality:
                         case SLOT_SPECIALITY.NODE_ID:
                             inputs.update({name: node.get("id")})
+                        case SLOT_SPECIALITY.SIGNAL:
+                            pass
                         case default:
-                            inputs.update(
-                                {name: speciality_input.get(speciality, None)}
-                            )
+                            print('speciality_input:', speciality, input, flush=True)
+                            getter = speciality_input.get(speciality, None)
+                            if getter is not None:
+                                inputs.update(
+                                    {name: getter()}
+                                )
+                            else:
+                                raise Exception(f"Invalid speciality for input slot: speciality: {speciality} name: {name} attachment type: {attachment_type}")
 
         outputs = node_executor.execute(globals, inputs, triggered=triggered, **node)
         with node_dict_lock:
