@@ -3,6 +3,7 @@ from flask import Flask, request
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from app_enums import SUBMIT_TASK_TYPE
+import asyncio
 
 load_dotenv()
 
@@ -46,7 +47,9 @@ def handle_task():
         # also store any data recieved into triggered_data field
         triggered = False
         if type == SUBMIT_TASK_TYPE.TRIGGERED:
+            
             trigger_node_id = data.get("trigger_node", None)
+            print(f'triggered execution for node {trigger_node_id}', flush=True)
             triggered = True
             data = data.get("data", None)
             if trigger_node_id is None:

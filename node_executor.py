@@ -62,28 +62,16 @@ class NodeExecutor:
 
         outputs = {}
         output_slots = kwargs.get("output_slots", [])
-        node_class_name = kwargs.get("node_class_name", None)
-
+        delayed_output_slots = kwargs.get("delayed_output_slots", [])
+        triggered_data = kwargs.get("triggered_data", None)
+        
         if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and triggered:
-            # check cases for different trigger nodes
-            match node_class_name:
-                # Trigger Node class with name 'WebhookTriggerNode'
-                case "WebhookTriggerNode":
-                    # get data from triggered_data
-                    data = kwargs.get("triggered_data", None)
-                    if "data" not in output_slots:
-                        raise Exception(
-                            f"Output slot 'data' is required for Webhook triggered node: {self.id}"
-                        )
-                    outputs.update({"data": data})
-                    return outputs
-
-                # Trigger Node class with name 'PeriodicTriggerNode'
-                case "PeriodicTriggerNode":
-                    return outputs
-
-                case default:
-                    return outputs
+            # when trigger node is triggered, return only delayed output slots
+            if all(param in triggered_data for param in delayed_output_slots):
+                outputs = {slot: triggered_data.get(slot) for slot in delayed_output_slots}
+            else:
+                raise Exception(f"data is missing some field from {delayed_output_slots}")
+            return outputs
 
         try:
             NodeClassExecutor(node_class_type=node_class_type, node_id=self.id).execute(
@@ -93,11 +81,6 @@ class NodeExecutor:
             raise Exception(
                 f'Error in executing generic node with node_class_type: {kwargs.get("node_class_type", None)}, node id{self.id}, error: {str(e)}'
             )
-
-        if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and not triggered:
-            output_slots = output_slots.copy()
-            if 'data' in output_slots:
-                output_slots.remove("data")
 
         for slot in output_slots:
             if slot in locals:

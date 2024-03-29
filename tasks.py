@@ -4,7 +4,7 @@ from threading import Lock
 
 from db import DB
 from api import API
-from app_enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM
+from app_enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM, NODE_ENUM
 from const import BACKEND_URL
 
 parameter_map: dict[dict] = {}
@@ -28,11 +28,16 @@ def execute_node(node, nodes_dict, triggered=False):
     children = []
 
     # if all input parameters exist then execute the node and submit all child not execute node, else return
-    if all(param in inputs for param in input_slots):
+    # triggered execution node should not wait for inputs
+    node_type = node.get("node_type", None)
+    node_class_type = node.get("node_class_type", None)
+        
+    if all(param in inputs for param in input_slots) or triggered:
         # execute the node
         node_executor = NodeExecutor(
-            node_type=node.get("node_type", None), id=node.get("id")
+            node_type=node_type, id=node.get("id")
         )
+        
 
         special_slots = node.get("special_slots", [])
 
@@ -69,6 +74,9 @@ def execute_node(node, nodes_dict, triggered=False):
             (slot.get("name", None), slot.get("speciality", None))
             for slot in node.get("special_slots", [])
             if special_slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.OUTPUT
+        ) if not triggered else dict(
+            (slot.get("name", None), slot.get("speciality", None))
+            for slot in node.get("delayed_special_output_slots", [])
         )
 
         source_connections = node.get("source_connections", [])
@@ -86,8 +94,11 @@ def execute_node(node, nodes_dict, triggered=False):
                     parameter_map.setdefault(target_node_id, {}).update(
                         {target_slot: output}
                     )
-
+                
             children.append(target_node_id)
+
+        # remove duplicate entries
+        children = list(set(children))
 
     return children
 
