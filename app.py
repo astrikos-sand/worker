@@ -67,7 +67,8 @@ def handle_task():
                 submit_node_task(node_id, executor, nodes_dict, triggered=triggered)
 
     except Exception as e:
-        return {"error": str(e), "success": False}
+        print(f"Error: {str(e)}", flush=True)
+        return {"error": str(e), "success": False}, 500
 
     node_outputs = {
         node_id: {

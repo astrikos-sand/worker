@@ -1,6 +1,6 @@
 import requests
 from app_enums import NODE_CLASS_ENUM
-
+import const as const
 
 class NodeClassExecutor:
 
@@ -23,6 +23,10 @@ class NodeClassExecutor:
             raise Exception(
                 f"Code is required for execution in a node class: {self.node_class_type} and node id: {self.node_id}"
             )
-        code_text = self.read_online_file(code)
+        code_url = code
+        if const.DEBUG:
+            media_part = code.split("/media/")[1]
+            code_url = f"{const.BACKEND_URL}/media/{media_part}"
+        code_text = self.read_online_file(code_url)
         exec(code_text, globals, locals)
         return locals
