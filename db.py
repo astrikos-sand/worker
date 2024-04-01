@@ -1,6 +1,5 @@
 from api import API
 from const import BACKEND_URL
-import json
 
 
 class DBModel:
@@ -17,7 +16,6 @@ class DBModel:
         self.default_headers = {
             'X-CSRFToken': csrf_token,
         }
-        print(f'cookies: {self.backend.session.cookies.get_dict()}')
 
     def get(self, headers: dict=None, **kwargs) -> dict:
         headers = headers or {}
@@ -25,22 +23,47 @@ class DBModel:
         id = kwargs.get("id", None)
         if id is None:
             return self.backend.get(f"{self.name}/")
-        return self.backend.get(f"{self.name}/{id}/", headers=headers)
+        try:
+            response = self.backend.get(f"{self.name}/{id}/", headers=headers)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(e, flush=True)
+            return response
 
     def insert(self, data: dict, headers: dict=None) -> dict:
         headers = headers or {}
         headers.update(self.default_headers)
-        return self.backend.post(f"{self.name}/", data,headers=headers)
+        try:
+            response = self.backend.post(f"{self.name}/", data,headers=headers)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(e, flush=True)
+            return response
+
 
     def update(self, id: str, data: dict, headers: dict=None) -> dict:
         headers = headers or {}
         headers.update(self.default_headers)
-        return self.backend.put(f"{self.name}/{id}/", data, headers=headers)
+        try:
+            response = self.backend.put(f"{self.name}/{id}/", data, headers=headers)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(e, flush=True)
+            return response 
 
     def delete(self, id: str, headers: dict=None) -> dict:
         headers = headers or {}
         headers.update(self.default_headers)
-        return self.backend.delete(f"{self.name}/{id}/",headers=headers)
+        try:
+            response = self.backend.delete(f"{self.name}/{id}/",headers=headers)
+            response.raise_for_status()
+            return response
+        except Exception as e:
+            print(e, flush=True)
+            return response
 
 
 class DB:

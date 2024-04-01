@@ -53,7 +53,7 @@ def execute_node(node, nodes_dict, triggered=False):
                             inputs.update({name: node.get("id")})
                         case SLOT_SPECIALITY.SIGNAL:
                             pass
-                        case default:
+                        case _:
                             print('speciality_input:', speciality, input, flush=True)
                             getter = speciality_input.get(speciality, None)
                             if getter is not None:
