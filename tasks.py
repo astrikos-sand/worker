@@ -22,7 +22,7 @@ speciality_input = {
 def execute_node(node, nodes_dict, triggered=False):
     # fetch parameters
     inputs = parameter_map.get(node.get("id"), {})  # id is non nullable
-    input_slots = node.get("input_slots")  # input slot is non nullable
+    input_slots = node.get("input_slots", [])  # input slot is non nullable
 
     globals = {}
     children = []
@@ -40,6 +40,9 @@ def execute_node(node, nodes_dict, triggered=False):
         
 
         special_slots = node.get("special_slots", [])
+        delayed_output_slots = node.get("delayed_output_slots", [])
+        delayed_special_output_slots = node.get("delayed_special_output_slots", [])
+        output_slots = node.get("output_slots", [])
 
         # update all special slots with input speciality
         if special_slots:
@@ -67,23 +70,20 @@ def execute_node(node, nodes_dict, triggered=False):
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
         # for all output parameters, update the parameter map and submit the child nodes for execution
-
+        
         node_class_type: NODE_CLASS_ENUM = node.get("node_class_type", None)
-        # IMPORTANT! if node class is a trigger node and triggered is False then return
-        if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and not triggered:
-            return []  # do not execute further if trigger node is not triggered
-
+        
         if node_class_type != NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and triggered:
             raise Exception("Triggered is True for a non trigger node class")
 
         # get dict of all special output slots name and speciality
         special_output_slots = dict(
             (slot.get("name", None), slot.get("speciality", None))
-            for slot in node.get("special_slots", [])
-            if special_slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.OUTPUT
+            for slot in special_slots
+            if slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.OUTPUT
         ) if not triggered else dict(
             (slot.get("name", None), slot.get("speciality", None))
-            for slot in node.get("delayed_special_output_slots", [])
+            for slot in delayed_special_output_slots
         )
 
         source_connections = node.get("source_connections", [])
@@ -96,6 +96,18 @@ def execute_node(node, nodes_dict, triggered=False):
                 if special_output_slots.get(source_slot) == SLOT_SPECIALITY.SIGNAL:
                     pass  # do nothing when special output is signal
             else:
+                # if triggered and running will start from slots which are delayed ( delayed output slots )
+                if triggered and source_slot not in delayed_output_slots:
+                    continue
+            
+                # if not triggered and running will start from slots which are not delayed ( output slots )
+                if not triggered and source_slot not in output_slots:
+                    continue
+                
+                if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS:
+                    print(f'node_class_type {node_class_type} node_class_name {node.get("node_class_name", None)}', flush=True)
+                    print(f"executed with {source_slot}, ")
+                    
                 output = outputs.get(source_slot, None)
                 with lock:
                     parameter_map.setdefault(target_node_id, {}).update(
