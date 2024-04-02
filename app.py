@@ -2,12 +2,12 @@ from flask import Flask, request
 
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
-from app_enums import SUBMIT_TASK_TYPE
-import asyncio
+from config.enums import SUBMIT_TASK_TYPE
+
 
 load_dotenv()
 
-import const
+import config.const as const
 from tasks import submit_node_task
 
 app = Flask(__name__)

@@ -1,11 +1,11 @@
-from node_executor import NodeExecutor
+from executors.node_executor import NodeExecutor
 
 from threading import Lock
 
-from db import DB
-from api import API
-from app_enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM, NODE_ENUM
-from const import BACKEND_URL
+from utils.db import DB
+from utils.api import API
+from config.enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM, NODE_ENUM
+from config.const import BACKEND_URL
 
 parameter_map: dict[dict] = {}
 lock = Lock()
