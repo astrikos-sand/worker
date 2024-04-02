@@ -1,11 +1,11 @@
-from node_executor import NodeExecutor
+from executors.node_executor import NodeExecutor
 
 from threading import Lock
 
-from db import DB
-from api import API
-from app_enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM, NODE_ENUM
-from const import BACKEND_URL
+from utils.db import DB
+from utils.api import API
+from config.enums import SLOT_SPECIALITY, SLOT_ATTACHMENT_TYPE, NODE_CLASS_ENUM, NODE_ENUM
+from config.const import BACKEND_URL
 
 parameter_map: dict[dict] = {}
 lock = Lock()
@@ -18,111 +18,116 @@ speciality_input = {
     SLOT_SPECIALITY.NODE_ID: lambda: None,
 }
 
+speciality_output = {
+    SLOT_SPECIALITY.SIGNAL: lambda: True,
+}
 
-def execute_node(node, nodes_dict, triggered=False):
-    # fetch parameters
-    inputs = parameter_map.get(node.get("id"), {})  # id is non nullable
-    input_slots = node.get("input_slots", [])  # input slot is non nullable
 
-    globals = {}
-    children = []
-
-    # if all input parameters exist then execute the node and submit all child not execute node, else return
-    # triggered execution node should not wait for inputs
-    node_type = node.get("node_type", None)
+def execute_node(node: dict, nodes_dict: dict[dict], triggered=False):    
+    node_id = node.get("id", None)    
+    if node_id is None:
+        raise Exception("Node id is required for every node")
+    
     node_class_type = node.get("node_class_type", None)
         
-    if all(param in inputs for param in input_slots) or triggered:
-        # execute the node
-        node_executor = NodeExecutor(
-            node_type=node_type, id=node.get("id")
-        )
+    if node_class_type != NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and triggered:
+        raise Exception("Triggered is True for a non trigger node class")
+    
+    input_slots = node.get("input_slots", [])
+    inputs = nodes_dict.get(node_id).get("inputs", {}).copy()
+    
+    globals = {}
+    children = []
+    
+    ready_for_execution = True
+    if not triggered:
+        target_connections = node.get("target_connections", [])
+        for connection in target_connections:
+            source_node = connection.get("source", None)
+            source = nodes_dict.get(source_node, None)
+            if source and not source.get("executed", False):
+                ready_for_execution = False
+                break
+            
+    if ready_for_execution:        
+        if not all(param in inputs for param in input_slots):
+            raise Exception(f"All inputs are not available for node {node_id}, available inputs {inputs}, required inputs {input_slots}")
         
-
-        special_slots = node.get("special_slots", [])
-        delayed_output_slots = node.get("delayed_output_slots", [])
-        delayed_special_output_slots = node.get("delayed_special_output_slots", [])
+        node_type = node.get("node_type", None)
+        
+        node_executor = NodeExecutor(id=node_id, node_type=node_type)
+        
         output_slots = node.get("output_slots", [])
+        delayed_output_slots = node.get("delayed_output_slots", [])
+        
+        special_slots = node.get("special_slots", [])
+        delayed_special_output_slots = node.get("delayed_special_output_slots", [])
+        
+        special_input_slots = filter(lambda slot: slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.INPUT, special_slots)
+        special_output_slots = filter(lambda slot: slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.OUTPUT, special_slots)
+        
+        execution_signal = True
+        signal_slot = None
 
-        # update all special slots with input speciality
-        if special_slots:
-            for special_slot in special_slots:
-                speciality = special_slot.get("speciality", None)
-                name = special_slot.get("name", None)
-                attachment_type = special_slot.get("attachment_type", None)
-                if attachment_type == SLOT_ATTACHMENT_TYPE.INPUT:
-                    match speciality:
-                        case SLOT_SPECIALITY.NODE_ID:
-                            inputs.update({name: node.get("id")})
-                        case SLOT_SPECIALITY.SIGNAL:
-                            pass
-                        case _:
-                            print('speciality_input:', speciality, input, flush=True)
-                            getter = speciality_input.get(speciality, None)
-                            if getter is not None:
-                                inputs.update(
-                                    {name: getter()}
-                                )
-                            else:
-                                raise Exception(f"Invalid speciality for input slot: speciality: {speciality} name: {name} attachment type: {attachment_type}")
-
+        for special_input in special_input_slots:
+            speciality: SLOT_SPECIALITY = special_input.get("speciality", None)
+            name: str = special_input.get("name", None)
+            match speciality:
+                case SLOT_SPECIALITY.NODE_ID:
+                    inputs.update({name: node_id})
+                case SLOT_SPECIALITY.SIGNAL:
+                    signal_slot = name
+                    execution_signal = inputs.get(name, False) # if signal parameter exists then assign execution signal to that value otherwise always true
+                case _:
+                    special_input_fn = speciality_input.get(speciality, None)
+                    if special_input is not None:
+                        inputs.update({name: special_input_fn()})
+                    else:
+                        raise Exception(f"Invalid speciality for input slot: speciality: {speciality} name: {name}")
+                    
+        if not execution_signal:
+            return children # empty list when there is no execution signal
+        
+        if signal_slot is not None:
+            inputs.update({signal_slot: False})
         outputs = node_executor.execute(globals, inputs, triggered=triggered, **node)
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
-        # for all output parameters, update the parameter map and submit the child nodes for execution
+            
+        extract_special_outputs = lambda slots: dict((slot.get("name", None), slot.get("speciality", None)) for slot in slots)
+            
+        functional_output_slots = output_slots if not triggered else delayed_output_slots
+        functional_special_output_slots = special_output_slots if not triggered else delayed_special_output_slots
+        functional_special_output_slots = extract_special_outputs(functional_special_output_slots) # convert into key value pair dict
         
-        node_class_type: NODE_CLASS_ENUM = node.get("node_class_type", None)
-        
-        if node_class_type != NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and triggered:
-            raise Exception("Triggered is True for a non trigger node class")
-
-        # get dict of all special output slots name and speciality
-        special_output_slots = dict(
-            (slot.get("name", None), slot.get("speciality", None))
-            for slot in special_slots
-            if slot.get("attachment_type", None) == SLOT_ATTACHMENT_TYPE.OUTPUT
-        ) if not triggered else dict(
-            (slot.get("name", None), slot.get("speciality", None))
-            for slot in delayed_special_output_slots
-        )
-
         source_connections = node.get("source_connections", [])
+        
         for connection in source_connections:
             target_node_id = connection.get("target", None)
             target_slot = connection.get("target_slot", None)
             source_slot = connection.get("source_slot", None)
-
-            if source_slot in special_output_slots.keys():
-                if special_output_slots.get(source_slot) == SLOT_SPECIALITY.SIGNAL:
-                    pass  # do nothing when special output is signal
-            else:
-                # if triggered and running will start from slots which are delayed ( delayed output slots )
-                if triggered and source_slot not in delayed_output_slots:
-                    continue
-            
-                # if not triggered and running will start from slots which are not delayed ( output slots )
-                if not triggered and source_slot not in output_slots:
-                    continue
-                
-                if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS:
-                    print(f'node_class_type {node_class_type} node_class_name {node.get("node_class_name", None)}', flush=True)
-                    print(f"executed with {source_slot}, ")
-                    
+            output_present = False
+            if source_slot in functional_special_output_slots.keys():
+                functional_special_output_fn = speciality_output.get(functional_special_output_slots.get(source_slot), lambda : None)
+                output = functional_special_output_fn()
+                output_present =True
+            elif source_slot in functional_output_slots:
                 output = outputs.get(source_slot, None)
-                with lock:
-                    parameter_map.setdefault(target_node_id, {}).update(
-                        {target_slot: output}
-                    )
+                output_present = True
                 
-            children.append(target_node_id)
-
-        # remove duplicate entries
-        children = list(set(children))
-
+            if output_present:
+                with node_dict_lock:
+                    nodes_dict.get(target_node_id).setdefault("inputs", {}).update({target_slot: output})
+                children.append(target_node_id)
+                
+        with node_dict_lock:
+            nodes_dict.get(node_id).update({"executed": True})
+        
+    children = list(set(children))
     return children
 
 
-def submit_node_task(node_id, executor, nodes_dict, triggered=False):
+def submit_node_task(node_id, executor, nodes_dict: dict[dict], triggered=False):
     node = nodes_dict.get(node_id, None)
     future = executor.submit(execute_node, node, nodes_dict, triggered=triggered)
 

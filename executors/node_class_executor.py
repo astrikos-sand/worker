@@ -1,6 +1,6 @@
 import requests
-from app_enums import NODE_CLASS_ENUM
-import const as const
+from config.enums import NODE_CLASS_ENUM
+import config.const as const
 
 class NodeClassExecutor:
 

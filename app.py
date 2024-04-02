@@ -2,12 +2,12 @@ from flask import Flask, request
 
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
-from app_enums import SUBMIT_TASK_TYPE
-import asyncio
+from config.enums import SUBMIT_TASK_TYPE
+
 
 load_dotenv()
 
-import const
+import config.const as const
 from tasks import submit_node_task
 
 app = Flask(__name__)
@@ -17,9 +17,9 @@ app = Flask(__name__)
 def handle_task():
     try:
         data = request.json
+        
         nodes = data.get("nodes", [])
-        type = data.get("type", SUBMIT_TASK_TYPE.NORMAL)
-
+        submit_type = data.get("type", SUBMIT_TASK_TYPE.NORMAL)
         nodes_dict = {}
         start_nodes = []
 
@@ -32,21 +32,18 @@ def handle_task():
             nodes_dict.update({node_id: node})
 
             # If normal execution then find all nodes with no input slots
-            if type == SUBMIT_TASK_TYPE.NORMAL:
-                slots = node.get("input_slots", None)
+            if submit_type == SUBMIT_TASK_TYPE.NORMAL:
+                slots = node.get("input_slots", [])
                 target_connections = node.get("target_connections", [])
 
-                if slots is None:
-                    raise Exception(f"Input slots is null for node: {node_id}")
-
+                # if there is a connection with special slot then target_connection will not be empty when slot is empty
                 if len(slots) == 0 and len(target_connections) == 0:
                     start_nodes.append(node_id)
 
         # if triggered execution then find the trigger node and start execution from there
-
         # also store any data recieved into triggered_data field
         triggered = False
-        if type == SUBMIT_TASK_TYPE.TRIGGERED:
+        if submit_type == SUBMIT_TASK_TYPE.TRIGGERED:
             
             trigger_node_id = data.get("trigger_node", None)
             triggered = True
@@ -74,6 +71,7 @@ def handle_task():
             "node_type": nodes_dict.get(node_id).get("node_type", None),
             "node_class_type": nodes_dict.get(node_id).get("node_class_type", None),
             "node_class_name": nodes_dict.get(node_id).get("node_class_name", None),
+            "inputs": nodes_dict.get(node_id).get("inputs", {}),
             "outputs": nodes_dict.get(node_id).get(
                 "outputs",
                 {

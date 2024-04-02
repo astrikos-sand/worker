@@ -1,5 +1,5 @@
-from api import API
-from const import BACKEND_URL
+from utils.api import API
+from config.const import BACKEND_URL
 
 
 class DBModel:

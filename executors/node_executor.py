@@ -1,5 +1,5 @@
-from node_class_executor import NodeClassExecutor
-from app_enums import NODE_ENUM, DATA_TYPE, NODE_CLASS_ENUM
+from executors.node_class_executor import NodeClassExecutor
+from config.enums import NODE_ENUM, DATA_TYPE, NODE_CLASS_ENUM
 
 
 class NodeExecutor:
