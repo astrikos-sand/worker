@@ -46,6 +46,7 @@ def handle_task():
         if submit_type == SUBMIT_TASK_TYPE.TRIGGERED:
             
             trigger_node_id = data.get("trigger_node", None)
+            nodes_dict.get(trigger_node_id, {}).update({"triggered": True})
             triggered = True
             data = data.get("data", None)
             if trigger_node_id is None:

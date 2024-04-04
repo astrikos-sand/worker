@@ -44,12 +44,21 @@ def execute_node(node: dict, nodes_dict: dict[dict], triggered=False):
         target_connections = node.get("target_connections", [])
         for connection in target_connections:
             source_node = connection.get("source", None)
+            source_slot = connection.get("source_slot", None)
             source = nodes_dict.get(source_node, None)
             if source and not source.get("executed", False):
                 ready_for_execution = False
                 break
             
-    if ready_for_execution:        
+            source_delayed_output_slots = source.get("delayed_output_slots", [])
+            source_delayed_special_output_slots = source.get("delayed_special_output_slots", [])
+            source_total_delayed_slots = source_delayed_special_output_slots + source_delayed_output_slots
+            source_triggered = source.get("triggered", False)
+            if not source_triggered and source_slot in source_total_delayed_slots:
+                ready_for_execution = False
+                break
+            
+    if ready_for_execution:
         if not all(param in inputs for param in input_slots):
             raise Exception(f"All inputs are not available for node {node_id}, available inputs {inputs}, required inputs {input_slots}")
         
