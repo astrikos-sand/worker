@@ -129,7 +129,7 @@ def execute_node(node: dict, nodes_dict: dict[dict], triggered=False):
 
         if signal_slot is not None:
             inputs.update({signal_slot: False})
-        outputs = node_executor.execute(globals, inputs, triggered=triggered, **node)
+        outputs = node_executor.execute(globals, inputs, **node) # node contains value of triggered
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
 
