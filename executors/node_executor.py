@@ -78,13 +78,17 @@ class NodeExecutor:
         output_slots = kwargs.get("output_slots", [])
         delayed_output_slots = kwargs.get("delayed_output_slots", [])
         triggered_data = kwargs.get("triggered_data", None)
-        
+
         if node_class_type == NODE_CLASS_ENUM.TRIGGER_NODE_CLASS and triggered:
             # when trigger node is triggered, return only delayed output slots
             if all(param in triggered_data for param in delayed_output_slots):
-                outputs = {slot: triggered_data.get(slot) for slot in delayed_output_slots}
+                outputs = {
+                    slot: triggered_data.get(slot) for slot in delayed_output_slots
+                }
             else:
-                raise Exception(f"data is missing some field from {delayed_output_slots}")
+                raise Exception(
+                    f"data is missing some field from {delayed_output_slots}"
+                )
             return outputs
 
         try:
@@ -96,11 +100,11 @@ class NodeExecutor:
                 f'Error in executing generic node with node_class_type: {kwargs.get("node_class_type", None)}, node id{self.id}, error: {str(e)}'
             )
 
-        for slot in output_slots:
-            if slot in locals:
-                outputs.update({slot: locals[slot]})
-            else:
-                raise ValueError(
-                    f"Slot is not found in function output, check values returned by function for node: {self.id}"
-                )
+        # for slot in output_slots:
+        #     if slot in locals:
+        #         outputs.update({slot: locals[slot]})
+        #     else:
+        #         raise ValueError(
+        #             f"Slot is not found in function output, check values returned by function for node: {self.id}"
+        #         )
         return outputs

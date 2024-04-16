@@ -10,3 +10,4 @@ services:
       - "5000:5000"
     volumes:
       - ./:/astrikos-worker/
+      - ${DOCKER_SOCKET_PATH}:/var/run/docker.sock

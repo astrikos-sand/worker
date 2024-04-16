@@ -17,7 +17,7 @@ app = Flask(__name__)
 def handle_task():
     try:
         data = request.json
-        
+
         nodes = data.get("nodes", [])
         submit_type = data.get("type", SUBMIT_TASK_TYPE.NORMAL)
         nodes_dict = {}
@@ -44,7 +44,7 @@ def handle_task():
         # also store any data recieved into triggered_data field
         triggered = False
         if submit_type == SUBMIT_TASK_TYPE.TRIGGERED:
-            
+
             trigger_node_id = data.get("trigger_node", None)
             nodes_dict.get(trigger_node_id, {}).update({"triggered": True})
             triggered = True
@@ -78,7 +78,7 @@ def handle_task():
                 {
                     "details": "No outputs found, it seems this node is scheduled to run in future."
                 },
-            )
+            ),
         }
         for node_id in nodes_dict
     }
