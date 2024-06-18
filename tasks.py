@@ -19,7 +19,7 @@ node_dict_lock = Lock()
 speciality_input = {
     SLOT_SPECIALITY.DATABASE: lambda: DB(),
     SLOT_SPECIALITY.API: lambda: API,
-    SLOT_SPECIALITY.BACKEND: lambda: API(base_url=BACKEND_URL),
+    SLOT_SPECIALITY.BACKEND: lambda: API(base_url=f"{BACKEND_URL}/"),
     SLOT_SPECIALITY.NODE_ID: lambda: None,
 }
 

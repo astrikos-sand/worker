@@ -100,11 +100,11 @@ class NodeExecutor:
                 f'Error in executing generic node with node_class_type: {kwargs.get("node_class_type", None)}, node id{self.id}, error: {str(e)}'
             )
 
-        # for slot in output_slots:
-        #     if slot in locals:
-        #         outputs.update({slot: locals[slot]})
-        #     else:
-        #         raise ValueError(
-        #             f"Slot is not found in function output, check values returned by function for node: {self.id}"
-        #         )
+        for slot in output_slots:
+            if slot in locals:
+                outputs.update({slot: locals[slot]})
+            else:
+                raise ValueError(
+                    f"Slot is not found in function output, check values returned by function for node: {self.id}"
+                )
         return outputs

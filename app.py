@@ -3,6 +3,7 @@ from flask import Flask, request
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from config.enums import SUBMIT_TASK_TYPE
+from config.const import DOCKER_SOCKET_PATH
 
 
 load_dotenv()
@@ -85,6 +86,49 @@ def handle_task():
     return {"success": True, "outputs": node_outputs}
 
 
+@app.route("/env/", methods=["POST"])
+def create_environment():
+    data = request.json
+    requirements = data.get("requirements")
+    id = data.get("id")
+
+    import docker
+    from string import Template
+    from io import BytesIO
+    import json
+
+    if const.DEBUG:
+        media_part = requirements.split("/media/")[1]
+        download_url = f"{const.BACKEND_URL}/media/{media_part}"
+
+    template_file_path = f"{const.BASE_DIR}/environment/Dockerfile"
+    script_path = f"{const.BASE_DIR}/environment/download_script.py"
+
+    with open(script_path, "r") as file:
+        script_content = file.read()
+
+    with open(template_file_path, "r") as file:
+        template = Template(file.read())
+        dockerfile_content = template.substitute(
+            download_url=download_url, download_script=json.dumps(script_content)
+        )
+
+    client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
+    image_tag = f"astrikos-environment-{id}"
+
+    dockerfile_bytes = dockerfile_content.encode("utf-8")
+    dockerfile_obj = BytesIO(dockerfile_bytes)
+
+    client.images.build(
+        fileobj=dockerfile_obj,
+        tag=image_tag,
+        rm=True,
+        pull=True,
+    )
+
+    return {"success": True, "image_tag": image_tag}
+
+
 if __name__ == "__main__":
-    app.config["DEBUG"] = const.DEBUG
-    app.run(debug=const.DEBUG, host=const.HOST, port=const.PORT)
+    app.config["DEBUG"] = 1
+    app.run(debug=1, host=const.HOST, port=const.PORT)

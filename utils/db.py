@@ -6,7 +6,7 @@ class DBModel:
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.backend = API(base_url=BACKEND_URL)
+        self.backend = API(base_url=f"{BACKEND_URL}/")
         data = {"username": "worker", "password": "worker@123"}
         self.backend.post("auth/login/", data)
         csrf_token = self.backend.session.cookies.get("csrftoken")
