@@ -2,6 +2,7 @@ import requests
 from config.enums import NODE_CLASS_ENUM
 import config.const as const
 
+
 class NodeClassExecutor:
 
     def __init__(self, node_class_type: NODE_CLASS_ENUM, node_id: str):
@@ -27,6 +28,7 @@ class NodeClassExecutor:
         if const.DEBUG:
             media_part = code.split("/media/")[1]
             code_url = f"{const.BACKEND_URL}/media/{media_part}"
+
         code_text = self.read_online_file(code_url)
         exec(code_text, globals, locals)
         return locals

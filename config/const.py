@@ -1,8 +1,10 @@
 from os import getenv as env
-from distutils.util import strtobool
 from pathlib import Path
+from dotenv import load_dotenv
 
-DEBUG = bool(strtobool(env("DEBUG", "False")))
+load_dotenv()
+
+DEBUG = bool(int(env("DEBUG", 1)))
 BACKEND_URL = env("BACKEND_URL", "http://backend:8000")
 HOST = env("HOST", "0.0.0.0")
 PORT = env("PORT", 5000)

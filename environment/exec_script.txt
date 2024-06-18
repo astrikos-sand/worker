@@ -1,0 +1,10 @@
+import os
+
+locals = ${locals}
+globals = ${globals}
+
+code_file_path = "/app/code.py"
+
+with open(code_file_path, "r") as file:
+    code = file.read()
+    exec(code, globals, locals)
