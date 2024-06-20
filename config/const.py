@@ -10,3 +10,4 @@ HOST = env("HOST", "0.0.0.0")
 PORT = env("PORT", 5000)
 DOCKER_SOCKET_PATH = env("DOCKER_SOCKET_PATH", "unix:///var/run/docker.sock")
 BASE_DIR = Path(__file__).resolve().parent.parent
+TB_BACKEND_URL = env("TB_BACKEND_URL")
