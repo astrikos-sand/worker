@@ -73,10 +73,12 @@ def task_handler(data: dict):
         for node_id in nodes_dict
     }
 
-    API(base_url=f"{const.BACKEND_URL}").post(
-        "/tasks/save_outputs/",
-        data={"success": True, "outputs": node_outputs},
-    )
+    print(node_outputs, flush=True)
+
+    # API(base_url=f"{const.BACKEND_URL}").post(
+    #     "/tasks/save_outputs/",
+    #     data={"success": True, "outputs": node_outputs},
+    # )
 
 
 if __name__ == "__main__":
