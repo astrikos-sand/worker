@@ -17,6 +17,9 @@ class SLOT_SPECIALITY(StrEnum):
     BACKEND = "BACKEND"
     NODE_ID = "NODE_ID"
     SIGNAL = "SIG"
+    TB = "TB"
+    TB_QUEUE = "TBQ"
+    DB_CONNECTOR = "DB_CONNECTOR"
     NONE = "NONE"
 
 

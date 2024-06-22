@@ -73,7 +73,7 @@ def task_handler(data: dict):
         for node_id in nodes_dict
     }
 
-    print(node_outputs, flush=True)
+    # print(node_outputs, flush=True)
 
     # API(base_url=f"{const.BACKEND_URL}").post(
     #     "/tasks/save_outputs/",

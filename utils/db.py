@@ -51,11 +51,13 @@ class DBModel:
             print(e, flush=True)
             return str(e)
 
-    def insert(self, data: dict = None, headers: dict = None, files = None) -> dict:
+    def insert(self, data: dict = None, headers: dict = None, files=None) -> dict:
         headers = headers or {}
         headers.update(self.default_headers)
         try:
-            response = self.backend.post(f"{self.name}/", data, headers=headers, files=files)
+            response = self.backend.post(
+                f"{self.name}/", data, headers=headers, files=files
+            )
             return response
         except Exception as e:
             print(e, flush=True)
