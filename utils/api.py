@@ -31,10 +31,10 @@ class API:
             print(f"Error fetching from backend: {str(e)}")
             return str(e)
 
-    def post(self, url: str, data: dict, headers: dict = None) -> str:
+    def post(self, url: str, data: dict, headers: dict = None, files=None) -> str:
         try:
             response = self.session.post(
-                f"{self.base_url}{url}", json=data, headers=headers
+                f"{self.base_url}{url}", json=data, headers=headers, files=files
             )
             response.reason = response.json()
             response.raise_for_status()

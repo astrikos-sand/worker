@@ -4,6 +4,10 @@ from threading import Lock
 
 from utils.db import DB
 from utils.api import API
+from utils.tb import TB
+from utils.tb_queue import TBQueue
+from utils.db_connector import DBConnector
+
 from config.enums import (
     SLOT_SPECIALITY,
     SLOT_ATTACHMENT_TYPE,
@@ -21,6 +25,9 @@ speciality_input = {
     SLOT_SPECIALITY.API: lambda: API,
     SLOT_SPECIALITY.BACKEND: lambda: API(base_url=f"{BACKEND_URL}/"),
     SLOT_SPECIALITY.NODE_ID: lambda: None,
+    SLOT_SPECIALITY.TB: lambda: TB(),
+    SLOT_SPECIALITY.TB_QUEUE: lambda: TBQueue(),
+    SLOT_SPECIALITY.DB_CONNECTOR: lambda: DBConnector(),
 }
 
 speciality_output = {

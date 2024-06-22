@@ -16,20 +16,26 @@ def handle_task():
     import docker
     import json
 
-    client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
-    serialized_data = json.dumps(data)
     env_id = data.get("data", {}).get("env_id")
-    command = ["python", "task_handler.py", serialized_data]
 
-    container = client.containers.run(
-        image=f"astrikos-environment-{env_id}",
-        command=command,
-        detach=True,
-    )
+    if env_id is not None:
+        client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
+        serialized_data = json.dumps(data)
+        command = ["python", "task_handler.py", serialized_data]
 
-    container.wait()
-    print(container.logs().decode("utf-8"), flush=True)
-    container.remove()
+        container = client.containers.run(
+            image=f"astrikos-environment-{env_id}",
+            command=command,
+            detach=True,
+        )
+
+        container.wait()
+        print(container.logs().decode("utf-8"), flush=True)
+        container.remove()
+    else:
+        from task_handler import task_handler
+
+        task_handler(data)
 
     return {"success": True}
 
