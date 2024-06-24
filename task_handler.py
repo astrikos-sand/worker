@@ -5,9 +5,10 @@ from tasks import submit_node_task
 import sys
 from utils.api import API
 from config import const
-
+import logging
 
 def task_handler(data: dict):
+    logging.info(f"Starting task_handler with data: {data}")
     try:
         nodes = data.get("nodes", [])
         submit_type = data.get("type", SUBMIT_TASK_TYPE.NORMAL)
@@ -49,42 +50,30 @@ def task_handler(data: dict):
                     {"triggered_data": data}
                 )
 
+        logging.info(f"Starting execution with start_nodes: {start_nodes}")
         with ThreadPoolExecutor(10) as executor:
 
             for node_id in start_nodes:
                 submit_node_task(node_id, executor, nodes_dict, triggered=triggered)
-    except Exception as e:
-        print(f"Error: {str(e)}", flush=True)
-        return {"error": str(e), "success": False}, 500
 
-    node_outputs = {
-        node_id: {
-            "node_type": nodes_dict.get(node_id).get("node_type", None),
-            "node_class_type": nodes_dict.get(node_id).get("node_class_type", None),
-            "node_class_name": nodes_dict.get(node_id).get("node_class_name", None),
-            "inputs": nodes_dict.get(node_id).get("inputs", {}),
-            "outputs": nodes_dict.get(node_id).get(
-                "outputs",
-                {
-                    "details": "No outputs found, it seems this node is scheduled to run in future."
-                },
-            ),
+        node_outputs = {
+            node_id: {
+                "node_type": nodes_dict.get(node_id).get("node_type", None),
+                "node_class_type": nodes_dict.get(node_id).get("node_class_type", None),
+                "node_class_name": nodes_dict.get(node_id).get("node_class_name", None),
+                "inputs": nodes_dict.get(node_id).get("inputs", {}),
+                "outputs": nodes_dict.get(node_id).get(
+                    "outputs",
+                    {
+                        "details": "No outputs found, it seems this node is scheduled to run in future."
+                    },
+                ),
+            }
+            for node_id in nodes_dict
         }
-        for node_id in nodes_dict
-    }
 
-    # print(node_outputs, flush=True)
+        logging.info(f"Task completed. Node outputs: {node_outputs}")
 
-    # API(base_url=f"{const.BACKEND_URL}").post(
-    #     "/tasks/save_outputs/",
-    #     data={"success": True, "outputs": node_outputs},
-    # )
-
-
-if __name__ == "__main__":
-    load_dotenv()
-    data = sys.argv[1]
-    import json
-
-    data = json.loads(data)
-    task_handler(data)
+    except Exception as e:
+        logging.error(f"Error in task_handler: {str(e)}")
+        return {"error": str(e), "success": False}, 500

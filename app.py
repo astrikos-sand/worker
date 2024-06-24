@@ -6,39 +6,96 @@ from config.const import DOCKER_SOCKET_PATH
 load_dotenv()
 
 import config.const as const
+import logging
+from datetime import datetime
+import docker
+import json
+import requests
+import os
 
 app = Flask(__name__)
 
+def setup_logging():
+    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = f"execution_{current_time}.log"
+    
+    logger = logging.getLogger(f"execution_{current_time}")
+    logger.setLevel(logging.INFO)
+    
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.INFO)
+    
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    
+    logger.addHandler(file_handler)
+    
+    return log_file, logger
+
+def send_logs_to_django(log_file):
+    try:
+        with open(log_file, 'rb') as f:
+            files = {'file': f}
+            current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+            data = {'filename': f'Execution_Logs_{current_time}'}
+            response = requests.post(f"{const.BACKEND_URL}/archives/", files=files, data=data)
+            response.raise_for_status()
+        logging.info(f"Logs sent to Django backend successfully.")
+        
+        os.remove(log_file)
+        logging.info(f"Log file {log_file} deleted successfully.")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to send logs to Django backend: {str(e)}")
+    except OSError as e:
+        logging.error(f"Failed to delete log file {log_file}: {str(e)}")
+    except Exception as e:
+        logging.error(f"Unexpected error in send_logs_to_django: {str(e)}")
 
 @app.route("/", methods=["POST"])
 def handle_task():
-    data = request.json
-    import docker
-    import json
+    log_file, logger = setup_logging()
+    try:
+        data = request.json
+        logger.info(f"Received task data: {data}")
 
-    env_id = data.get("data", {}).get("env_id")
+        env_id = data.get("data", {}).get("env_id")
 
-    if env_id is not None:
-        client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
-        serialized_data = json.dumps(data)
-        command = ["python", "task_handler.py", serialized_data]
+        if env_id is not None:
+            try:
+                client = docker.from_env()
+                logger.info(f"Docker client initialized successfully")
+            except Exception as docker_error:
+                logger.error(f"Failed to initialize Docker client: {str(docker_error)}")
+                raise
+            serialized_data = json.dumps(data)
+            command = ["python", "task_handler.py", serialized_data]
 
-        container = client.containers.run(
-            image=f"astrikos-environment-{env_id}",
-            command=command,
-            detach=True,
-        )
+            logger.info(f"Running container for environment {env_id}")
+            container = client.containers.run(
+                image=f"astrikos-environment-{env_id}",
+                command=command,
+                detach=True,
+            )
 
-        container.wait()
-        print(container.logs().decode("utf-8"), flush=True)
-        container.remove()
-    else:
-        from task_handler import task_handler
+            container.wait()
+            logs = container.logs().decode("utf-8")
+            logger.info(f"Container logs: {logs}")
+            container.remove()
+        else:
+            from task_handler import task_handler
+            logger.info("Running task_handler directly")
+            task_handler(data)
 
-        task_handler(data)
-
-    return {"success": True}
-
+        logger.info("Task completed successfully")
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Error in handle_task: {str(e)}")
+        return {"error": str(e), "success": False}, 500
+    finally:
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+        send_logs_to_django(log_file)
 
 @app.route("/env/", methods=["POST"])
 def create_environment():
