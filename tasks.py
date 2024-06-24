@@ -62,15 +62,19 @@ def execute_node(node: dict, nodes_dict: dict[dict], triggered=False):
                 if not source.get("executed", False):
                     ready_for_execution = False
                     break
-            
+
                 source_delayed_output_slots = source.get("delayed_output_slots", [])
-                source_delayed_special_output_slots = source.get("delayed_special_output_slots", [])
-                source_total_delayed_slots = source_delayed_special_output_slots + source_delayed_output_slots
+                source_delayed_special_output_slots = source.get(
+                    "delayed_special_output_slots", []
+                )
+                source_total_delayed_slots = (
+                    source_delayed_special_output_slots + source_delayed_output_slots
+                )
                 source_triggered = source.get("triggered", False)
                 if not source_triggered and source_slot in source_total_delayed_slots:
                     ready_for_execution = False
                     break
-            
+
     if ready_for_execution:
         if not all(param in inputs for param in input_slots):
             raise Exception(
@@ -126,7 +130,9 @@ def execute_node(node: dict, nodes_dict: dict[dict], triggered=False):
 
         if signal_slot is not None:
             inputs.update({signal_slot: False})
-        outputs = node_executor.execute(globals, inputs, **node) # node contains value of triggered
+        outputs = node_executor.execute(
+            globals, inputs, **node
+        )  # node contains value of triggered
         with node_dict_lock:
             nodes_dict.get(node.get("id")).update({"outputs": outputs})
 

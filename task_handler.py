@@ -50,7 +50,6 @@ def task_handler(data: dict):
                 )
 
         with ThreadPoolExecutor(10) as executor:
-
             for node_id in start_nodes:
                 submit_node_task(node_id, executor, nodes_dict, triggered=triggered)
     except Exception as e:
@@ -83,8 +82,9 @@ def task_handler(data: dict):
 
 if __name__ == "__main__":
     load_dotenv()
-    data = sys.argv[1]
     import json
 
-    data = json.loads(data)
+    with open("data.json") as f:
+        data = json.load(f)
+
     task_handler(data)
