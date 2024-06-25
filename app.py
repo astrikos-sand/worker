@@ -2,11 +2,14 @@ import tarfile
 from flask import Flask, request
 from dotenv import load_dotenv
 from config.const import DOCKER_SOCKET_PATH
+from datetime import datetime
+from utils.logger import logger
 
 import docker
 import json
 from io import BytesIO
 import os
+import requests
 
 load_dotenv()
 
@@ -19,7 +22,9 @@ app = Flask(__name__)
 def handle_task():
     data = request.json
 
-    env_id = data.get("data", {}).get("env_id")
+    meta_data = data.get("data", {})
+    env_id = meta_data.get("env_id", None)
+    flow_id = meta_data.get("flow_id", None)
 
     if env_id is not None:
         client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
@@ -69,8 +74,22 @@ def handle_task():
 
         container.start()
         container.wait()
-        print(container.logs().decode("utf-8"), flush=True)
+
+        logs = container.logs()
+        logger.info(
+            f"\n*****Container Logs*****\n{logs.decode('utf-8')}\n************************"
+        )
         container.remove()
+
+        crr_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_filename = f"{flow_id}_{crr_time}.log"
+
+        requests.post(
+            f"{const.BACKEND_URL}/archives/",
+            data={"filename": log_filename},
+            files={"file": (log_filename, BytesIO(logs))},
+        )
+
     else:
         from task_handler import task_handler
 

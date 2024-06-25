@@ -1,4 +1,5 @@
 import requests
+from utils.logger import logger
 
 
 class API:
@@ -18,7 +19,7 @@ class API:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error fetching from backend: {str(e)}")
+            logger.error(f"Error fetching from backend: {str(e)}")
             return str(e)
 
     def get(self, url: str, headers: dict = None) -> str:
@@ -28,7 +29,7 @@ class API:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error fetching from backend: {str(e)}")
+            logger.error(f"Error fetching from backend: {str(e)}")
             return str(e)
 
     def post(self, url: str, data: dict, headers: dict = None, files=None) -> str:
@@ -40,7 +41,7 @@ class API:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error making post request to backend: {str(e)}")
+            logger.error(f"Error making post request to backend: {str(e)}")
             return str(e)
 
     def put(self, url: str, data: dict, headers: dict = None) -> str:
@@ -52,7 +53,7 @@ class API:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error making put request to backend: {str(e)}")
+            logger.error(f"Error making put request to backend: {str(e)}")
             return str(e)
 
     def delete(self, url: str, headers: dict = None) -> str:
@@ -62,5 +63,5 @@ class API:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            print(f"Error making delete request to backend: {str(e)}")
+            logger.error(f"Error making delete request to backend: {str(e)}")
             return str(e)

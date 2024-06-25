@@ -30,7 +30,6 @@ class NodeExecutor:
             raise Exception(f"Value is required for DataNode (id: {self.id})")
 
         def get_data(data_type, value):
-            print(type(type))
             match data_type:
                 case DATA_TYPE.INTEGER:
                     return int(value)

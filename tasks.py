@@ -12,7 +12,6 @@ from config.enums import (
     SLOT_SPECIALITY,
     SLOT_ATTACHMENT_TYPE,
     NODE_CLASS_ENUM,
-    NODE_ENUM,
 )
 from config.const import BACKEND_URL
 

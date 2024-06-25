@@ -1,5 +1,6 @@
 from utils.api import API
 from config.const import BACKEND_URL
+from utils.logger import logger
 
 
 class DBModel:
@@ -18,13 +19,19 @@ class DBModel:
         headers = headers or {}
         headers = self.default_headers.copy()
         id = kwargs.get("id", None)
+        query = kwargs.get("query", None)
+
+        if query is not None:
+            return self.backend.get(f"{self.name}/?{query}")
+
         if id is None:
             return self.backend.get(f"{self.name}/")
+
         try:
             response = self.backend.get(f"{self.name}/{id}/", headers=headers)
             return response
         except Exception as e:
-            print(e, flush=True)
+            logger.error(e)
             return e
 
     def action(
@@ -48,7 +55,7 @@ class DBModel:
             )
             return response
         except Exception as e:
-            print(e, flush=True)
+            logger.error(e)
             return str(e)
 
     def insert(self, data: dict = None, headers: dict = None, files=None) -> dict:
@@ -60,7 +67,7 @@ class DBModel:
             )
             return response
         except Exception as e:
-            print(e, flush=True)
+            logger.error(e)
             return str(e)
 
     def update(self, id: str, data: dict, headers: dict = None) -> dict:
@@ -70,7 +77,7 @@ class DBModel:
             response = self.backend.put(f"{self.name}/{id}/", data, headers=headers)
             return response
         except Exception as e:
-            print(e, flush=True)
+            logger.error(e)
             return str(e)
 
     def delete(self, id: str, headers: dict = None) -> dict:
@@ -80,7 +87,7 @@ class DBModel:
             response = self.backend.delete(f"{self.name}/{id}/", headers=headers)
             return response
         except Exception as e:
-            print(e, flush=True)
+            logger.error(e)
             return str(e)
 
 

@@ -1,6 +1,7 @@
 import requests
 from config.enums import NODE_CLASS_ENUM
 import config.const as const
+from utils.logger import logger
 
 
 class NodeClassExecutor:
@@ -15,7 +16,7 @@ class NodeClassExecutor:
             response.raise_for_status()  # Raises an exception for HTTP errors (status codes >= 400)
             return response.text  # Return the content of the file as text
         except requests.RequestException as e:
-            print(f"Error fetching file: {e}")
+            logger.error(f"Fetching file: {e}")
         return None
 
     def execute(self, globals, locals, **kwargs):
