@@ -2,9 +2,11 @@ from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from config.enums import SUBMIT_TASK_TYPE
 from tasks import submit_node_task
-import sys
-from utils.api import API
-from config import const
+from utils.logger import logger
+
+# import sys
+# from wrappers.api import API
+# from config import const
 
 
 def task_handler(data: dict):
@@ -53,7 +55,7 @@ def task_handler(data: dict):
             for node_id in start_nodes:
                 submit_node_task(node_id, executor, nodes_dict, triggered=triggered)
     except Exception as e:
-        print(f"Error: {str(e)}", flush=True)
+        logger.error(f"{str(e)}")
         return {"error": str(e), "success": False}, 500
 
     node_outputs = {
