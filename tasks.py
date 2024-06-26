@@ -2,11 +2,11 @@ from executors.node_executor import NodeExecutor
 
 from threading import Lock
 
-from utils.db import DB
-from utils.api import API
-from utils.tb import TB
-from utils.tb_queue import TBQueue
-from utils.db_connector import DBConnector
+from wrappers.db import DB
+from wrappers.api import API
+from wrappers.tb import TB
+from wrappers.tb_queue import TBQueue
+from wrappers.db_connector import DBConnector
 
 from config.enums import (
     SLOT_SPECIALITY,

@@ -1,4 +1,4 @@
-from utils.api import API
+from wrappers.api import API
 from config.const import BACKEND_URL
 from utils.logger import logger
 

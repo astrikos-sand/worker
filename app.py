@@ -48,7 +48,7 @@ def handle_task():
                 file_path = os.path.join(project_dir, _file_path)
                 tar.add(file_path, arcname=_file_path)
 
-            directories = ["executors", "utils", "config"]
+            directories = ["executors", "utils", "config", "wrappers"]
             for directory in directories:
                 app_dir = os.path.join(project_dir, directory)
                 for root, dirs, files in os.walk(app_dir):
