@@ -1,7 +1,7 @@
 import psycopg2
 
 
-class DBWrapper:
+class PostgresConnector:
     def __init__(self, dbname, user, password, host, port):
         self.dbname = dbname
         self.user = user
@@ -24,10 +24,3 @@ class DBWrapper:
     def close(self):
         self.cursor.close()
         self.connection.close()
-
-
-class DBConnector:
-    def connect(self, dbname, user, password, host, port) -> DBWrapper:
-        connector = DBWrapper(dbname, user, password, host, port)
-        connector.connect()
-        return connector
