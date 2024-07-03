@@ -18,6 +18,11 @@ import config.const as const
 app = Flask(__name__)
 
 
+@app.route("/health/", methods=["GET"])
+def health():
+    return {"success": True}
+
+
 @app.route("/", methods=["POST"])
 def handle_task():
     data = request.json
@@ -27,7 +32,7 @@ def handle_task():
     flow_id = meta_data.get("flow_id", None)
 
     if env_id is not None:
-        client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
+        client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
         serialized_data = json.dumps(data)
         command = ["python", "task_handler.py"]
         image = f"astrikos-environment-{env_id}"
@@ -66,7 +71,7 @@ def handle_task():
             command=command,
             detach=True,
             extra_hosts={
-                "astrikos-dev.com": const.LOCAL_IP,
+                "host.docker.internal": "host-gateway",
             },
         )
 
@@ -122,7 +127,7 @@ def create_environment():
             download_url=download_url, download_script=json.dumps(script_content)
         )
 
-    client = docker.DockerClient(base_url=DOCKER_SOCKET_PATH)
+    client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
     image_tag = f"astrikos-environment-{id}"
 
     dockerfile_bytes = dockerfile_content.encode("utf-8")
@@ -150,7 +155,7 @@ def create_environment():
         pull=True,
         custom_context=True,
         extra_hosts={
-            "astrikos-dev.com": const.LOCAL_IP,
+            "host.docker.internal": "host-gateway",
         },
     )
 

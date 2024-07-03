@@ -6,7 +6,7 @@ from wrappers.db import DB
 from wrappers.api import API
 from wrappers.tb import TB
 from wrappers.tb_queue import TBQueue
-from wrappers.db_connector.config import DBConnector
+# from wrappers.db_connector.config import DBConnector
 
 from config.enums import (
     SLOT_SPECIALITY,
@@ -26,7 +26,7 @@ speciality_input = {
     SLOT_SPECIALITY.NODE_ID: lambda: None,
     SLOT_SPECIALITY.TB: lambda: TB(),
     SLOT_SPECIALITY.TB_QUEUE: lambda: TBQueue(),
-    SLOT_SPECIALITY.DB_CONNECTOR: lambda: DBConnector,
+    # SLOT_SPECIALITY.DB_CONNECTOR: lambda: DBConnector,
 }
 
 speciality_output = {
