@@ -14,7 +14,7 @@ class FlowManager:
 
         self.outputs = {}
         self.start_nodes = []
-        self.nodes_dict = {}
+        self.nodes_dict: dict[str, BaseNode] = {}
         self.lock = Lock()
         self.status = FLOW_STATUS.PENDING.value
 
@@ -32,18 +32,22 @@ class FlowManager:
     # Manager that manages a node and its children
     def node_and_children_manager(self, node_id: str):
         node = self.nodes_dict.get(node_id)
+        if node.executed:
+            return
+
         node_manager = NodeManager(node, self.nodes_dict, self.lock)
         node_manager.manage()
 
         children = node_manager.children
 
-        for child_id in children:
-            self.node_and_children_manager(child_id)
+        with ThreadPoolExecutor(5) as executor:
+            for child_id in children:
+                executor.submit(self.node_and_children_manager, child_id)
 
     # Execute the flow
     def manage(self):
         self.filter_start_nodes()
 
-        with ThreadPoolExecutor(10) as executor:
+        with ThreadPoolExecutor(5) as executor:
             for node_id in self.start_nodes:
                 executor.submit(self.node_and_children_manager, node_id)
