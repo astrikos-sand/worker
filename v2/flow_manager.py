@@ -1,7 +1,9 @@
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+
 from v2.mappings import FLOW_STATUS
 from v2.node_manager import NodeManager
-from threading import Lock
+from v2.node import BaseNode
 
 
 class FlowManager:
@@ -19,12 +21,13 @@ class FlowManager:
     # Filter start nodes
     def filter_start_nodes(self):
         for node in self.nodes:
-            id = node.get("id", None)
-            self.nodes_dict.update({id: node})
-            slots = node.get("input_slots", [])
+            node_obj = BaseNode(node)
+
+            self.nodes_dict.update({node_obj.id: node_obj})
+            slots = node_obj.input_slots
 
             if len(slots) == 0:
-                self.start_nodes.append(id)
+                self.start_nodes.append(node_obj.id)
 
     # Manager that manages a node and its children
     def node_and_children_manager(self, node_id: str):

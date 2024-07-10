@@ -11,7 +11,7 @@ class FunctionNode(Base):
         return response.text
 
     def execute_code(self):
-        code = self.node.get("definition").get("code", None)
+        code = self.node.dict.get("definition").get("code", None)
         if code is None:
             raise Exception(
                 f"Code is required for execution in a node class: {self.node_class_type} and node id: {self.node_id}"
@@ -25,17 +25,17 @@ class FunctionNode(Base):
 
         globals = {}
         locals = self.inputs
-        exec(code_text, {}, locals)
+        exec(code_text, globals, locals)
         return locals
 
     def execute(self) -> dict:
-        output_slots = self.node.get("output_slots", [])
+        output_slots = self.node.output_slots
 
         try:
             locals = self.execute_code()
         except Exception as e:
             raise Exception(
-                f"Error in executing function: {self.node.get('definition').get('name')}, node id{self.node.id}, error: {str(e)}"
+                f"Error in executing function: {self.node.dict.get('definition').get('name')}, node id{self.node.id}, error: {str(e)}"
             )
 
         outputs = {}
