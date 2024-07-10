@@ -23,6 +23,22 @@ def health():
     return {"success": True}
 
 
+@app.route("/v2/", methods=["POST"])
+def handle_v2_task():
+    data = request.json
+
+    from v2.flow_manager import FlowManager
+
+    nodes = data.get("nodes", [])
+    flow = data.get("flow", {})
+    inputs = data.get("inputs", {})
+
+    flow_manager = FlowManager(flow=flow, nodes=nodes, inputs=inputs)
+    flow_manager.manage()
+
+    return {"success": True}
+
+
 @app.route("/", methods=["POST"])
 def handle_task():
     data = request.json
@@ -164,4 +180,9 @@ def create_environment():
 
 if __name__ == "__main__":
     app.config["DEBUG"] = 1
+
+    from v2.subscribe import register_executors
+
+    register_executors()
+
     app.run(debug=1, host=const.HOST, port=const.PORT)
