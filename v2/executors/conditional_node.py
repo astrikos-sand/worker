@@ -13,15 +13,15 @@ class ConditionalNode(Base):
         output_slots = self.node.output_slots
         output_values = self.node.dict.get("values")
 
-        triggered_slot = None
         outputs = {}
 
         for output_slot in output_slots:
             output_value = output_values.get(output_slot.get("name"))
             value_type = output_slot.get("value_type")
             typecast_output_value = get_data(value_type, output_value)
-            outputs[output_slot.get("name")] = typecast_output_value
+
             if typecast_value == typecast_output_value:
-                triggered_slot = output_slot
+                outputs[output_slot.get("name")] = typecast_output_value
+                break
 
         return outputs

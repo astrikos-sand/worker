@@ -10,12 +10,19 @@ class NodeManager:
         cls.executors[node_type] = executor
 
     def __init__(
-        self, node: BaseNode, nodes_dict: dict[str, BaseNode], lock: Lock
+        self,
+        node: BaseNode,
+        nodes_dict: dict[str, BaseNode],
+        lock: Lock,
+        inputs: dict,
+        outputs: dict,
     ) -> None:
         self.node = node
         self.lock = lock
         self.nodes_dict = nodes_dict
         self.children = []
+        self.flow_inputs = inputs
+        self.flow_outputs = outputs
 
     @property
     def executor(self):
@@ -29,23 +36,26 @@ class NodeManager:
             if not source.executed:
                 return False
 
+        if not all(
+            param in self.node.inputs
+            for param in list(self.node.input_slots_names.keys())
+        ):
+            return False
+
         return True
 
     def manage(self):
         if self.is_ready_for_execution():
-            if not all(
-                param in self.node.inputs
-                for param in self.node.input_slots_names.keys()
-            ):
-                raise Exception(
-                    f"All inputs are not available for node {self.node.id}, available inputs {self.node.inputs}, required inputs {self.node.input_slots_names.keys()}"
-                )
-
             node_executor = self.executor(
-                self.node, self.node.inputs, self.lock, self.nodes_dict
+                self.node,
+                self.node.inputs,
+                self.lock,
+                self.nodes_dict,
+                flow_inputs=self.flow_inputs,
+                flow_outputs=self.flow_outputs,
             )
             node_executor.manage()
             self.children = node_executor.children
 
             with self.lock:
-                self.nodes_dict.get(self.node.id).executed = True
+                self.node.executed = True

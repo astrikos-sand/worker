@@ -3,13 +3,14 @@ from v2.node import BaseNode
 
 class Base:
     def __init__(
-        self, node: BaseNode, inputs, lock, nodes_dict: dict[str, BaseNode]
+        self, node: BaseNode, inputs, lock, nodes_dict: dict[str, BaseNode], **kwargs
     ) -> None:
         self.node = node
         self.inputs = inputs
         self.lock = lock
         self.nodes_dict = nodes_dict
         self.children = []
+        self.kwargs = kwargs
 
     def execute(self) -> dict:
         raise NotImplementedError
@@ -27,9 +28,12 @@ class Base:
             to_slot_id = connection.get("to_slot", None)
             from_slot_id = connection.get("from_slot", None)
 
-            output = outputs.get(
-                self.node.output_slots_dict.get(from_slot_id).get("name"), None
-            )
+            output_name = self.node.output_slots_dict.get(from_slot_id).get("name")
+
+            if output_name not in outputs:
+                continue
+
+            output = outputs.get(output_name)
 
             with self.lock:
                 target_input_slots = self.nodes_dict.get(target_id).input_slots

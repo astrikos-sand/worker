@@ -4,9 +4,7 @@ from v2.executors.datanode import DataNode
 from v2.executors.function_node import FunctionNode
 from v2.executors.foreach_node import ForEachNode
 from v2.executors.conditional_node import ConditionalNode
-from v2.executors.input_node import InputNode
-from v2.executors.output_node import OutputNode
-from v2.executors.flow_node import FlowNode
+from v2.executors.flow_node import FlowNode, InputNode, OutputNode
 
 
 def register_executors():

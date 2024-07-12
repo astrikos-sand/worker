@@ -7,7 +7,7 @@ from v2.node import BaseNode
 
 
 class FlowManager:
-    def __init__(self, flow: dict, nodes: list, inputs: dict):
+    def __init__(self, flow: dict, nodes: list, inputs: dict = {}):
         self.nodes = nodes
         self.inputs = inputs
         self.flow = flow
@@ -17,6 +17,7 @@ class FlowManager:
         self.nodes_dict: dict[str, BaseNode] = {}
         self.lock = Lock()
         self.status = FLOW_STATUS.PENDING.value
+        self.futures = []
 
     # Filter start nodes
     def filter_start_nodes(self):
@@ -35,14 +36,17 @@ class FlowManager:
         if node.executed:
             return
 
-        node_manager = NodeManager(node, self.nodes_dict, self.lock)
+        node_manager = NodeManager(
+            node, self.nodes_dict, self.lock, self.inputs, self.outputs
+        )
         node_manager.manage()
 
         children = node_manager.children
 
         with ThreadPoolExecutor(5) as executor:
             for child_id in children:
-                executor.submit(self.node_and_children_manager, child_id)
+                future = executor.submit(self.node_and_children_manager, child_id)
+                self.futures.append(future)
 
     # Execute the flow
     def manage(self):
@@ -50,4 +54,9 @@ class FlowManager:
 
         with ThreadPoolExecutor(5) as executor:
             for node_id in self.start_nodes:
-                executor.submit(self.node_and_children_manager, node_id)
+                future = executor.submit(self.node_and_children_manager, node_id)
+                self.futures.append(future)
+
+    def wait_for_completion(self):
+        for future in self.futures:
+            future.result()
