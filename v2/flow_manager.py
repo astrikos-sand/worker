@@ -33,8 +33,6 @@ class FlowManager:
     # Manager that manages a node and its children
     def node_and_children_manager(self, node_id: str):
         node = self.nodes_dict.get(node_id)
-        if node.executed:
-            return
 
         node_manager = NodeManager(
             node, self.nodes_dict, self.lock, self.inputs, self.outputs
