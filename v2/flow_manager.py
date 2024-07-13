@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+import copy
 
 from v2.mappings import FLOW_STATUS
 from v2.node_manager import NodeManager
@@ -8,9 +9,9 @@ from v2.node import BaseNode
 
 class FlowManager:
     def __init__(self, flow: dict, nodes: list, inputs: dict = {}):
-        self.nodes = nodes
-        self.inputs = inputs
-        self.flow = flow
+        self.nodes = copy.deepcopy(nodes)
+        self.inputs = copy.deepcopy(inputs)
+        self.flow = copy.deepcopy(flow)
 
         self.outputs = {}
         self.start_nodes = []

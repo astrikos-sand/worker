@@ -27,7 +27,6 @@ class Base:
 
         outputs = self.execute()
 
-        # TODO: Optimize it as we have slots id now - O(1)
         with self.lock:
             self.nodes_dict.get(self.node.id).outputs = outputs
 
