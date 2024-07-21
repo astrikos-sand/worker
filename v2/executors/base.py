@@ -56,4 +56,9 @@ class Base:
                 if self.is_ready_for_execution(target):
                     self.children.append(target_id)
 
-        print(f"Node {self.node.id} executed with outputs {outputs}")
+        if len(str(outputs)) < 500:
+            print(f"Node {self.node.id} executed with outputs {outputs}")
+        else:
+            print(
+                f"Node {self.node.id} executed with outputs of length {len(str(outputs))}"
+            )

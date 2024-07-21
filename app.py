@@ -26,15 +26,62 @@ def health():
 @app.route("/v2/", methods=["POST"])
 def handle_v2_task():
     data = request.json
+    lib = data.get("flow", {}).get("lib", None)
 
-    from v2.flow_manager import FlowManager
+    if lib is not None:
+        client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
+        serialized_data = json.dumps(data)
+        command = ["python", "v2_task.py"]
+        image = f"astrikos-environment-{lib}"
 
-    nodes = data.get("nodes", [])
-    flow = data.get("flow", {})
-    inputs = data.get("inputs", {})
+        project_dir = const.BASE_DIR
+        tarstream = BytesIO()
 
-    flow_manager = FlowManager(flow=flow, nodes=nodes, inputs=inputs)
-    flow_manager.manage()
+        with tarfile.open(fileobj=tarstream, mode="w") as tar:
+            json_bytes = serialized_data.encode("utf-8")
+            json_file = BytesIO(json_bytes)
+            tarinfo = tarfile.TarInfo(name="data.json")
+            tarinfo.size = len(json_bytes)
+            tar.addfile(tarinfo, json_file)
+
+            file_paths = ["tasks.py", ".env", "task_handler.py", "v2_task.py"]
+
+            for _file_path in file_paths:
+                file_path = os.path.join(project_dir, _file_path)
+                tar.add(file_path, arcname=_file_path)
+
+            directories = ["executors", "utils", "config", "wrappers", "v2"]
+            for directory in directories:
+                app_dir = os.path.join(project_dir, directory)
+                for root, dirs, files in os.walk(app_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        tar.add(
+                            file_path,
+                            arcname=f"{os.path.relpath(file_path, project_dir)}",
+                        )
+
+        tarstream.seek(0)
+
+        container = client.containers.create(
+            image=image,
+            command=command,
+            detach=True,
+            extra_hosts={
+                "host.docker.internal": "host-gateway",
+            },
+        )
+
+        client.api.put_archive(container.id, "/app/", tarstream)
+
+        container.start()
+        container.wait()
+
+        logs = container.logs()
+        logger.info(
+            f"\n*****Container Logs*****\n{logs.decode('utf-8')}\n************************"
+        )
+        container.remove()
 
     return {"success": True}
 
