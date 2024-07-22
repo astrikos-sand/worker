@@ -83,6 +83,15 @@ def handle_v2_task():
         )
         container.remove()
 
+        crr_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_filename = f"{data.get('flow', {}).get('id')}_{crr_time}.log"
+
+        requests.post(
+            f"{const.BACKEND_URL}/v2/archives/",
+            data={"name": log_filename},
+            files={"file": (log_filename, BytesIO(logs))},
+        )
+
     return {"success": True}
 
 

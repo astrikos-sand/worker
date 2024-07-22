@@ -3,6 +3,8 @@ import requests
 from v2.executors.base import Base
 from v2.flow_manager import FlowManager
 
+from config.const import BACKEND_URL
+
 
 class InputNode(Base):
     def execute(self) -> dict:
@@ -21,7 +23,7 @@ class FlowNode(Base):
     def execute(self) -> dict:
         # TODO: Add interface for this
         res = requests.get(
-            f"http://localhost:8000/v2/flow/{self.node.dict.get('represent').get('id')}/nodes/"
+            f"{BACKEND_URL}/v2/flow/{self.node.dict.get('represent').get('id')}/nodes/"
         )
         data = res.json()
         flow = data.get("flow")

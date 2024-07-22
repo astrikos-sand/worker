@@ -4,6 +4,7 @@ from v2.executors.base import Base
 from v2.executors.utils import get_data
 
 from v2.flow_manager import FlowManager
+from config.const import BACKEND_URL
 
 
 class ConditionalNode(Base):
@@ -31,7 +32,7 @@ class ConditionalNode(Base):
                 break
 
         flow_id = match_case.get("block").get("flow").get("id")
-        res = requests.get(f"http://localhost:8000/v2/flow/{flow_id}/nodes/")
+        res = requests.get(f"{BACKEND_URL}/v2/flow/{flow_id}/nodes/")
         data = res.json()
 
         flow = data.get("flow")
