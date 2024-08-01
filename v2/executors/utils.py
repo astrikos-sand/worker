@@ -12,7 +12,9 @@ def get_data(data_type, value):
             return str(value)
 
         case DATA_TYPE.BOOLEAN.value:
-            return bool(value)
+            if value.lower() == "true":
+                return True
+            return False
 
         case DATA_TYPE.FLOAT.value:
             return float(value)

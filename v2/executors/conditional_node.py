@@ -13,16 +13,16 @@ class ConditionalNode(Base):
         value_type = self.node.dict.get("value_type")
 
         condition = inputs.pop("_condition")
-        condition_typecast_value = get_data(value_type, condition)
+        condition_typecast_value = condition
 
         cases = self.node.dict.get("cases")
+        match_case = None
 
         for case in cases:
             value = case.get("value")
-            block = case.get("block")
 
-            if block.get("flow").get("name") == "_default":
-                match_case = case
+            if value is None:
+                default_case = case
                 continue
 
             case_typecast_value = get_data(value_type, value)
@@ -30,6 +30,9 @@ class ConditionalNode(Base):
             if condition_typecast_value == case_typecast_value:
                 match_case = case
                 break
+
+        if not match_case:
+            match_case = default_case
 
         flow_id = match_case.get("block").get("flow").get("id")
         res = requests.get(f"{BACKEND_URL}/v2/flow/{flow_id}/nodes/")
