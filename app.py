@@ -87,14 +87,26 @@ def handle_v2_task():
             )
             container.remove()
 
-            crr_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            log_filename = f"{data.get('flow', {}).get('name')}_{crr_time}.txt"
+            crr_time = datetime.now()
+
+            year = crr_time.year
+            month = crr_time.month
+            day = crr_time.day
+            hour = crr_time.hour
+            minute = crr_time.minute
+            second = crr_time.second
+            log_filename = f"{day}_{hour:02}:{minute:02}:{second:02}.txt"
 
             requests.post(
-                f"{const.BACKEND_URL}/v2/archives/",
-                data={"name": log_filename},
+                f"{const.BACKEND_URL}/v2/archives/logs/",
+                data={
+                    "flow": data.get("flow").get("id"),
+                    "timestamp_prefix": f"{year}/{month:02}",
+                    "name": log_filename,
+                },
                 files={"file": (log_filename, BytesIO(logs))},
             )
+
             print(
                 f"Task for {data.get('flow', {}).get('name')} completed successfully",
                 flush=True,
