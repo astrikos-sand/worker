@@ -12,6 +12,7 @@ class Base:
         self.children = []
         self.kwargs = kwargs
         self.global_dict: dict = self.kwargs.get("global_dict")
+        self.flow: dict = self.kwargs.get("flow")
 
     def execute(self) -> dict:
         raise NotImplementedError
@@ -58,8 +59,6 @@ class Base:
                     self.children.append(target_id)
 
         if len(str(outputs)) < 500:
-            print(f"Node {self.node.id} executed with outputs {outputs}")
+            print(f"{self.node} executed with outputs {outputs}")
         else:
-            print(
-                f"Node {self.node.id} executed with outputs of length {len(str(outputs))}"
-            )
+            print(f"{self.node} executed with outputs of length {len(str(outputs))}")

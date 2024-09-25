@@ -43,6 +43,7 @@ class FlowManager:
             self.inputs,
             self.outputs,
             global_dict=self.global_dict,
+            flow=self.flow,
         )
         node_manager.manage()
 
@@ -55,12 +56,25 @@ class FlowManager:
 
     # Execute the flow
     def manage(self):
+        flow_name = self.flow.get("name")
+
+        if self.flow.get("prefix") is not None:
+            flow_name = (
+                f"{self.flow.get('prefix').get('full_name')}/{self.flow.get('name')}"
+            )
+
+        flow_display = f"{flow_name} ({self.flow.get('id')[:7]})"
+
+        print(f"Execution Started for flow {flow_display}")
+
         self.filter_start_nodes()
 
         with ThreadPoolExecutor(5) as executor:
             for node_id in self.start_nodes:
                 future = executor.submit(self.node_and_children_manager, node_id)
                 self.futures.append(future)
+
+        print(f"Execution Completed for flow {flow_display}")
 
     def wait_for_completion(self):
         for future in self.futures:

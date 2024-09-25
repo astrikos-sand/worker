@@ -18,3 +18,11 @@ class DATA_TYPE(Enum):
     DICTIONARY = "DICT"
     ANY = "ANY"
     NONE = "NONE"
+
+
+class NODE_TYPE(Enum):
+    FUNCTION = "FunctionNode"
+    DATA = "DataNode"
+    FLOW = "FlowNode"
+    INPUT = "InputNode"
+    OUTPUT = "OutputNode"

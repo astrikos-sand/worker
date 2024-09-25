@@ -37,6 +37,9 @@ class FunctionNode(Base):
             "_get_global": self.get_global,
             "_set_global": self.set_global,
             "_globals": self.get_globals,
+            "_BACKEND_URL": const.BACKEND_URL,
+            "_NODE_ID": self.node.id,
+            "_FLOW_ID": self.flow.get("id"),
         }
         locals = self.inputs
         exec(code_text, globals, locals)

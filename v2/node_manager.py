@@ -38,7 +38,7 @@ class NodeManager:
             self.nodes_dict,
             flow_inputs=self.flow_inputs,
             flow_outputs=self.flow_outputs,
-            global_dict=self.kwargs.get("global_dict"),
+            **self.kwargs,
         )
         node_executor.manage()
         self.children = node_executor.children
