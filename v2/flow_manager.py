@@ -19,6 +19,7 @@ class FlowManager:
         self.lock = Lock()
         self.status = FLOW_STATUS.PENDING.value
         self.futures = []
+        self.global_dict = {"globals": {}, "lock": Lock()}
 
     # Filter start nodes
     def filter_start_nodes(self):
@@ -36,7 +37,12 @@ class FlowManager:
         node = self.nodes_dict.get(node_id)
 
         node_manager = NodeManager(
-            node, self.nodes_dict, self.lock, self.inputs, self.outputs
+            node,
+            self.nodes_dict,
+            self.lock,
+            self.inputs,
+            self.outputs,
+            global_dict=self.global_dict,
         )
         node_manager.manage()
 

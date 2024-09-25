@@ -11,6 +11,7 @@ class Base:
         self.nodes_dict = nodes_dict
         self.children = []
         self.kwargs = kwargs
+        self.global_dict: dict = self.kwargs.get("global_dict")
 
     def execute(self) -> dict:
         raise NotImplementedError
