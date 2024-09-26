@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Logs</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.5;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        h2,
+        h3 {
+            color: #2c3e50;
+            border-bottom: 1px solid #2980b9;
+            padding-bottom: 3px;
+            margin: 10px 0;
+            font-size: 18px;
+        }
+
+        .log-container {
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .timestamp {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+
+        .message {
+            margin-left: 5px;
+            flex-grow: 1;
+            font-size: 12px;
+        }
+
+        .node-id {
+            color: #2980b9;
+        }
+
+        .node-type {
+            color: #8e44ad;
+        }
+
+        .additional-info {
+            margin-left: 10px;
+            color: #34495e;
+            font-size: 12px;
+        }
+
+        .toggle-button {
+            background-color: transparent;
+            border: none;
+            color: #2980b9;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toggle-button:hover {
+            text-decoration: underline;
+        }
+
+        .no-logs {
+            text-align: center;
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            border-bottom: 2px solid #2980b9;
+        }
+
+        .log-entries {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .flow-logs,
+        .log-entries {
+            padding-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Execution Logs</h1>
+
+    <div>
+        <div class="log-container">
+            <h2>Flow Information</h2>
+            <p><strong>Flow ID:</strong> {{ logs.flow.id[0:7] }}</p>
+            <p><strong>Flow Name:</strong> {{ logs.flow.name }}</p>
+
+            <h2>Flow Logs</h2>
+            {% if logs.flow.logs %}
+            <div class="flow-logs">
+                {% for log in logs.flow.logs %}
+                <div class="log-entry">
+                    <span class="timestamp">{{ log.timestamp }}</span>
+                    <span class="message">{% if log.error %}
+                        <span style="color: #e74c3c;">Error: </span>
+                        {% endif %}
+                        {{ log.message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-logs">No flow logs available.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h2 style="text-align: center;">Logs by Node ID</h2>
+            {% if logs.nodes %}
+            {% for node_id, node_data in logs.nodes.items() %}
+            <div class="log-container">
+                <button class="toggle-button" onclick="toggleNodeLogs('{{ node_id }}')">
+                    Node ID: <span class="node-id">{{ node_id[0:7] }}</span> (Type: <span class="node-type">{{
+                        node_data.node_type }}</span>)
+                </button>
+
+                <div class="additional-info">
+                    {% for key, value in node_data.items() %}
+                    {% if key != 'logs' and key != 'node_type' %}
+                    <p><strong>{{ key }}:</strong> {{ value }}</p>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="log-entries" id="node-logs-{{ node_id }}" style="display: none;">
+                    {% if node_data.logs %}
+                    {% for log in node_data.logs %}
+                    <div class="log-entry">
+                        <span class="timestamp">{{ log.timestamp }}</span>
+                        <p class="message" style="max-width: 60vw; max-height: 200px; overflow-y: auto;">{% if log.error
+                            %}
+                            <span style="color: #e74c3c;">Error: </span>
+                            {% endif %}{{ log.message
+                            }}
+                        </p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="no-logs">No logs available for this node.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="no-logs">No node logs available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <h2 style="text-align: center;">Logs by Timestamp</h2>
+        {% if logs.timestamp %}
+        {% for timestamp, log_data in logs.timestamp.items() %}
+        <div class="log-container">
+            <button class="toggle-button" onclick="toggleLogEntries('{{ timestamp }}')">
+                Timestamp: <span class="timestamp">{{ timestamp }}</span>
+            </button>
+            <div class="log-entries" id="log-entries-{{ timestamp }}" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Message</th>
+                            <th>Additional Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in log_data %}
+                        <tr>
+                            <td>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    <p> {% if log.error %}
+                                        <span style="color: #e74c3c;">Error: </span>
+                                        {% endif %}{{ log.message }}
+                                    </p>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    {% for key, value in log.items() %}
+                                    {% if key not in ['message', 'error'] %}
+                                    <strong>{{ key }}:</strong> {{ value }}<br>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="no-logs">No logs available by timestamp.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleLogEntries(timestamp) {
+            var logEntries = document.getElementById('log-entries-' + timestamp);
+            logEntries.style.display = logEntries.style.display === 'none' || logEntries.style.display === '' ? 'block' : 'none';
+        }
+
+        function toggleNodeLogs(nodeId) {
+            var logEntries = document.getElementById('node-logs-' + nodeId);
+            logEntries.style.display = logEntries.style.display === 'none' || logEntries.style.display === '' ? 'block' : 'none';
+        }
+    </script>
+
+</body>
+
+</html>

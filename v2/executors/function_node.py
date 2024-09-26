@@ -5,6 +5,10 @@ import config.const as const
 
 
 class FunctionNode(Base):
+    def logger(self, *messages, error=False):
+        for message in messages:
+            self.node_logger(self.node.id, message, error=error)
+
     def read_online_file(self, url):
         response = requests.get(url)
         response.raise_for_status()
@@ -40,6 +44,7 @@ class FunctionNode(Base):
             "_BACKEND_URL": const.BACKEND_URL,
             "_NODE_ID": self.node.id,
             "_FLOW_ID": self.flow.get("id"),
+            "_logger": self.logger,
         }
         locals = self.inputs
         exec(code_text, globals, locals)

@@ -97,15 +97,16 @@ def handle_v2_task():
             second = crr_time.second
             log_filename = f"{day}_{hour:02}:{minute:02}:{second:02}.txt"
 
-            requests.post(
-                f"{const.BACKEND_URL}/v2/archives/logs/",
-                data={
-                    "flow": data.get("flow").get("id"),
-                    "timestamp_prefix": f"{year}/{month:02}",
-                    "name": log_filename,
-                },
-                files={"file": (log_filename, BytesIO(logs))},
-            )
+            if len(logs) > 0:
+                requests.post(
+                    f"{const.BACKEND_URL}/v2/archives/logs/",
+                    data={
+                        "flow": data.get("flow").get("id"),
+                        "timestamp_prefix": f"txt/{year}/{month:02}",
+                        "name": log_filename,
+                    },
+                    files={"file": (log_filename, BytesIO(logs))},
+                )
 
             print(
                 f"Task for {data.get('flow', {}).get('name')} completed successfully",

@@ -13,6 +13,7 @@ class Base:
         self.kwargs = kwargs
         self.global_dict: dict = self.kwargs.get("global_dict")
         self.flow: dict = self.kwargs.get("flow")
+        self.node_logger = self.kwargs.get("node_logger")
 
     def execute(self) -> dict:
         raise NotImplementedError
@@ -26,6 +27,7 @@ class Base:
         return True
 
     def manage(self):
+        self.node_logger(self.node.id, "Execution started")
 
         outputs = self.execute()
 
@@ -59,6 +61,10 @@ class Base:
                     self.children.append(target_id)
 
         if len(str(outputs)) < 500:
-            print(f"{self.node} executed with outputs {outputs}")
+            self.node_logger(self.node.id, f"Executed with outputs {outputs}")
         else:
-            print(f"{self.node} executed with outputs of length {len(str(outputs))}")
+            self.node_logger(
+                self.node.id, f"Executed with outputs of length {len(str(outputs))}"
+            )
+
+        self.node_logger(self.node.id, "Execution finished")
