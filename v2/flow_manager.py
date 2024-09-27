@@ -10,10 +10,11 @@ from config.const import BACKEND_URL, BASE_DIR
 
 
 class FlowManager:
-    def __init__(self, flow: dict, nodes: list, inputs: dict = {}):
+    def __init__(self, flow: dict, nodes: list, inputs: dict = {}, **kwargs):
         self.nodes = copy.deepcopy(nodes)
         self.inputs = copy.deepcopy(inputs)
         self.flow = copy.deepcopy(flow)
+        self.execution_id: str = kwargs.get("execution_id")
 
         self.outputs = {}
         self.start_nodes = []
@@ -176,7 +177,7 @@ class FlowManager:
         json_data = json.dumps(self.logs)
         f = io.BytesIO(json_data.encode())
 
-        requests.post(
+        res = requests.post(
             url,
             files={"file": (json_file_name, f)},
             data={
@@ -185,6 +186,7 @@ class FlowManager:
                 "timestamp_prefix": f"json/{year}/{month:02}",
             },
         )
+        json_archive_id = res.json().get("id")
 
         from jinja2 import Environment, FileSystemLoader
 
@@ -197,13 +199,24 @@ class FlowManager:
 
         f = io.BytesIO(output.encode())
 
-        requests.post(
+        res = requests.post(
             url,
             files={"file": (html_file_name, f)},
             data={
                 "name": html_file_name,
                 "flow": self.flow.get("id"),
                 "timestamp_prefix": f"html/{year}/{month:02}",
+            },
+        )
+
+        html_archive_id = res.json().get("id")
+
+        requests.patch(
+            f"{BACKEND_URL}/v2/flows/{self.flow.get('id')}/executions/",
+            json={
+                "id": self.execution_id,
+                "json_logs": json_archive_id,
+                "html_logs": html_archive_id,
             },
         )
 

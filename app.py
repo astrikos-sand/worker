@@ -28,10 +28,16 @@ def health():
 def handle_v2_task():
     data = request.json
     lib = data.get("lib")
-    id = lib.get("id")[:8]
-    name = lib.get("name")
 
     if lib is not None:
+        id = lib.get("id")[:8]
+        name = lib.get("name")
+
+        res = requests.post(
+            f"{const.BACKEND_URL}/v2/flows/{data.get('flow').get('id')}/executions/",
+        )
+        data["execution_id"] = res.json().get("id")
+
         client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
         serialized_data = json.dumps(data)
         command = ["python", "v2_task.py"]
@@ -97,8 +103,10 @@ def handle_v2_task():
             second = crr_time.second
             log_filename = f"{day}_{hour:02}:{minute:02}:{second:02}.txt"
 
+            archive_id = None
+
             if len(logs) > 0:
-                requests.post(
+                res = requests.post(
                     f"{const.BACKEND_URL}/v2/archives/logs/",
                     data={
                         "flow": data.get("flow").get("id"),
@@ -107,6 +115,17 @@ def handle_v2_task():
                     },
                     files={"file": (log_filename, BytesIO(logs))},
                 )
+
+                archive_id = res.json().get("id")
+
+            requests.patch(
+                f"{const.BACKEND_URL}/v2/flows/{data.get('flow').get('id')}/executions/",
+                json={
+                    "id": data.get("execution_id"),
+                    "container_logs": archive_id,
+                    "status": "SUCCESS",
+                },
+            )
 
             print(
                 f"Task for {data.get('flow', {}).get('name')} completed successfully",
