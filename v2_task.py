@@ -10,8 +10,11 @@ def task_handler(data):
     nodes = data.get("nodes", [])
     flow = data.get("flow", {})
     inputs = data.get("inputs", {})
+    execution_id = data.get("execution_id")
 
-    flow_manager = FlowManager(flow=flow, nodes=nodes, inputs=inputs)
+    flow_manager = FlowManager(
+        flow=flow, nodes=nodes, inputs=inputs, execution_id=execution_id
+    )
     flow_manager.manage()
 
 

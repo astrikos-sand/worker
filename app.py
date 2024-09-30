@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from config.const import DOCKER_SOCKET_PATH
 from datetime import datetime
 from utils.logger import logger
+import threading
 
 import docker
 import json
@@ -26,13 +27,21 @@ def health():
 @app.route("/v2/", methods=["POST"])
 def handle_v2_task():
     data = request.json
-    lib = data.get("flow", {}).get("lib", None)
+    lib = data.get("lib")
 
     if lib is not None:
+        id = lib.get("id")[:8]
+        name = lib.get("name")
+
+        res = requests.post(
+            f"{const.BACKEND_URL}/v2/flows/{data.get('flow').get('id')}/executions/",
+        )
+        data["execution_id"] = res.json().get("id")
+
         client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
         serialized_data = json.dumps(data)
         command = ["python", "v2_task.py"]
-        image = f"astrikos-environment-{lib}"
+        image = f"{name}-{id}"
 
         project_dir = const.BASE_DIR
         tarstream = BytesIO()
@@ -63,34 +72,68 @@ def handle_v2_task():
 
         tarstream.seek(0)
 
-        container = client.containers.create(
-            image=image,
-            command=command,
-            detach=True,
-            extra_hosts={
-                "host.docker.internal": "host-gateway",
-            },
-        )
+        def run_container():
+            container = client.containers.create(
+                image=image,
+                command=command,
+                detach=True,
+                extra_hosts={
+                    "host.docker.internal": "host-gateway",
+                },
+            )
 
-        client.api.put_archive(container.id, "/app/", tarstream)
+            client.api.put_archive(container.id, "/app/", tarstream)
 
-        container.start()
-        container.wait()
+            container.start()
+            container.wait()
 
-        logs = container.logs()
-        logger.info(
-            f"\n*****Container Logs*****\n{logs.decode('utf-8')}\n************************"
-        )
-        container.remove()
+            logs = container.logs()
+            logger.info(
+                f"\n*****Container Logs*****\n{logs.decode('utf-8')}\n************************"
+            )
+            container.remove()
 
-        crr_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_filename = f"{data.get('flow', {}).get('id')}_{crr_time}.log"
+            crr_time = datetime.now()
 
-        requests.post(
-            f"{const.BACKEND_URL}/v2/archives/",
-            data={"name": log_filename},
-            files={"file": (log_filename, BytesIO(logs))},
-        )
+            year = crr_time.year
+            month = crr_time.month
+            day = crr_time.day
+            hour = crr_time.hour
+            minute = crr_time.minute
+            second = crr_time.second
+            log_filename = f"{day}_{hour:02}:{minute:02}:{second:02}.txt"
+
+            archive_id = None
+
+            if len(logs) > 0:
+                res = requests.post(
+                    f"{const.BACKEND_URL}/v2/archives/logs/",
+                    data={
+                        "flow": data.get("flow").get("id"),
+                        "timestamp_prefix": f"txt/{year}/{month:02}",
+                        "name": log_filename,
+                    },
+                    files={"file": (log_filename, BytesIO(logs))},
+                )
+
+                archive_id = res.json().get("id")
+
+            requests.patch(
+                f"{const.BACKEND_URL}/v2/flows/{data.get('flow').get('id')}/executions/",
+                json={
+                    "id": data.get("execution_id"),
+                    "container_logs": archive_id,
+                    "status": "SUCCESS",
+                },
+            )
+
+            print(
+                f"Task for {data.get('flow', {}).get('name')} completed successfully",
+                flush=True,
+            )
+
+        thread = threading.Thread(target=run_container)
+        thread.start()
 
     return {"success": True}
 
@@ -179,7 +222,8 @@ def handle_task():
 def create_environment():
     data = request.json
     requirements = data.get("requirements")
-    id = data.get("id")
+    id = data.get("id")[:8]
+    name = data.get("name")
 
     from string import Template
 
@@ -187,7 +231,7 @@ def create_environment():
         media_part = requirements.split("/media/")[1]
         download_url = f"{const.BACKEND_URL}/media/{media_part}"
 
-    template_file_path = f"{const.BASE_DIR}/environment/Dockerfile"
+    template_file_path = f"{const.BASE_DIR}/environment/template.txt"
     script_path = f"{const.BASE_DIR}/environment/download_script.py"
 
     with open(script_path, "r") as file:
@@ -196,11 +240,12 @@ def create_environment():
     with open(template_file_path, "r") as file:
         template = Template(file.read())
         dockerfile_content = template.substitute(
-            download_url=download_url, download_script=json.dumps(script_content)
+            download_url=download_url,
+            download_script=json.dumps(script_content),
+            python_image="python:3.10.6-slim",
         )
 
-    client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
-    image_tag = f"astrikos-environment-{id}"
+    image_tag = f"{name}-{id}"
 
     dockerfile_bytes = dockerfile_content.encode("utf-8")
     dockerfile_obj = BytesIO(dockerfile_bytes)
@@ -220,16 +265,22 @@ def create_environment():
 
     tar_stream.seek(0)
 
-    client.images.build(
-        fileobj=tar_stream,
-        tag=image_tag,
-        rm=True,
-        pull=True,
-        custom_context=True,
-        extra_hosts={
-            "host.docker.internal": "host-gateway",
-        },
-    )
+    def build_image():
+        client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
+        client.images.build(
+            fileobj=tar_stream,
+            tag=image_tag,
+            rm=True,
+            pull=True,
+            custom_context=True,
+            extra_hosts={
+                "host.docker.internal": "host-gateway",
+            },
+        )
+        print(f"Image {image_tag} built successfully", flush=True)
+
+    thread = threading.Thread(target=build_image)
+    thread.start()
 
     return {"success": True, "image_tag": image_tag}
 

@@ -30,7 +30,12 @@ class FlowNode(Base):
         nodes = data.get("nodes")
         inputs = self.inputs
 
-        flow_manager = FlowManager(flow, nodes, inputs)
+        res = requests.post(
+            f"{BACKEND_URL}/v2/flows/{flow.get('id')}/executions/",
+        )
+        execution_id = res.json().get("id")
+
+        flow_manager = FlowManager(flow, nodes, inputs, execution_id)
         flow_manager.manage()
         outputs = flow_manager.outputs
 

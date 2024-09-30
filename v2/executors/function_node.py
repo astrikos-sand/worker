@@ -5,10 +5,24 @@ import config.const as const
 
 
 class FunctionNode(Base):
+    def logger(self, *messages, error=False):
+        for message in messages:
+            self.node_logger(self.node.id, message, error=error)
+
     def read_online_file(self, url):
         response = requests.get(url)
         response.raise_for_status()
         return response.text
+
+    def get_globals(self):
+        return self.global_dict.get("globals")
+
+    def get_global(self, key):
+        return self.global_dict.get("globals").get(key, None)
+
+    def set_global(self, key, value):
+        with self.global_dict.get("lock"):
+            self.global_dict.get("globals").update({key: value})
 
     def execute_code(self):
         code = self.node.dict.get("definition").get("code", None)
@@ -23,7 +37,15 @@ class FunctionNode(Base):
 
         code_text = self.read_online_file(code_url)
 
-        globals = {}
+        globals = {
+            "_get_global": self.get_global,
+            "_set_global": self.set_global,
+            "_globals": self.get_globals,
+            "_BACKEND_URL": const.BACKEND_URL,
+            "_NODE_ID": self.node.id,
+            "_FLOW_ID": self.flow.get("id"),
+            "_logger": self.logger,
+        }
         locals = self.inputs
         exec(code_text, globals, locals)
         return locals

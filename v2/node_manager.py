@@ -16,6 +16,7 @@ class NodeManager:
         lock: Lock,
         inputs: dict,
         outputs: dict,
+        **kwargs
     ) -> None:
         self.node = node
         self.lock = lock
@@ -23,6 +24,7 @@ class NodeManager:
         self.children = []
         self.flow_inputs = inputs
         self.flow_outputs = outputs
+        self.kwargs = kwargs
 
     @property
     def executor(self):
@@ -36,6 +38,7 @@ class NodeManager:
             self.nodes_dict,
             flow_inputs=self.flow_inputs,
             flow_outputs=self.flow_outputs,
+            **self.kwargs,
         )
         node_executor.manage()
         self.children = node_executor.children
