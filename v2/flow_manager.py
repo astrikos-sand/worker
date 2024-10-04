@@ -39,10 +39,10 @@ class FlowManager:
     def set_flow_name(self):
         self.flow_name = self.flow.get("name")
 
-        if self.flow.get("prefix") is not None:
-            self.flow_name = (
-                f"{self.flow.get('prefix').get('full_name')}/{self.flow.get('name')}"
-            )
+        # if self.flow.get("prefix") is not None:
+        #     self.flow_name = (
+        #         f"{self.flow.get('prefix').get('full_name')}/{self.flow.get('name')}"
+        #     )
 
     def node_logger(
         self,

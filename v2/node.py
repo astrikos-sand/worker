@@ -39,20 +39,20 @@ class BaseNode:
                 definition = self.dict.get("definition")
                 definition_name = definition.get("name")
 
-                if definition.get("prefix") is not None:
-                    definition_name = (
-                        f"{definition.get('prefix').get('full_name')}/{definition_name}"
-                    )
+                # if definition.get("prefix") is not None:
+                #     definition_name = (
+                #         f"{definition.get('prefix').get('full_name')}/{definition_name}"
+                #     )
 
                 return f"{self.node_type} {definition_name} ({node_id})"
 
             case NODE_TYPE.FLOW.value:
                 represent = self.dict.get("represent")
                 represent_name = represent.get("name")
-                if represent.get("prefix") is not None:
-                    represent_name = (
-                        f"{represent.get('prefix').get('full_name')}/{represent_name}"
-                    )
+                # if represent.get("prefix") is not None:
+                #     represent_name = (
+                #         f"{represent.get('prefix').get('full_name')}/{represent_name}"
+                #     )
 
                 return f"{self.node_type} -> {represent_name} ({node_id})"
 
@@ -79,10 +79,10 @@ class BaseNode:
                 definition = self.dict.get("definition")
                 definition_name = definition.get("name")
 
-                if definition.get("prefix") is not None:
-                    definition_name = (
-                        f"{definition.get('prefix').get('full_name')}/{definition_name}"
-                    )
+                # if definition.get("prefix") is not None:
+                #     definition_name = (
+                #         f"{definition.get('prefix').get('full_name')}/{definition_name}"
+                #     )
 
                 return {
                     "name": definition_name,
@@ -92,10 +92,10 @@ class BaseNode:
             case NODE_TYPE.FLOW.value:
                 represent = self.dict.get("represent")
                 represent_name = represent.get("name")
-                if represent.get("prefix") is not None:
-                    represent_name = (
-                        f"{represent.get('prefix').get('full_name')}/{represent_name}"
-                    )
+                # if represent.get("prefix") is not None:
+                #     represent_name = (
+                #         f"{represent.get('prefix').get('full_name')}/{represent_name}"
+                #     )
 
                 return {
                     "name": represent_name,
