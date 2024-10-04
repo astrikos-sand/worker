@@ -56,6 +56,7 @@ class FunctionNode(Base):
         try:
             locals = self.execute_code()
         except Exception as e:
+            self.logger(str(e), error=True)
             raise Exception(
                 f"Error in executing function: {self.node.dict.get('definition').get('name')}, node id{self.node.id}, error: {str(e)}"
             )
