@@ -242,7 +242,7 @@ def create_environment():
         dockerfile_content = template.substitute(
             download_url=download_url,
             download_script=json.dumps(script_content),
-            python_image="python:3.10.6-slim",
+            python_image="python:3.10-bookworm",
         )
 
     image_tag = f"{name}-{id}"
@@ -266,18 +266,41 @@ def create_environment():
     tar_stream.seek(0)
 
     def build_image():
-        client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
-        client.images.build(
-            fileobj=tar_stream,
-            tag=image_tag,
-            rm=True,
-            pull=True,
-            custom_context=True,
-            extra_hosts={
-                "host.docker.internal": "host-gateway",
+        logs = ""
+
+        crr_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_filename = f"{id}_{crr_time}.txt"
+
+        try:
+            client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
+            _, response = client.images.build(
+                fileobj=tar_stream,
+                tag=image_tag,
+                rm=True,
+                pull=True,
+                custom_context=True,
+                extra_hosts={
+                    "host.docker.internal": "host-gateway",
+                },
+            )
+
+            for line in response:
+                if "stream" in line:
+                    logs += line["stream"]
+
+            logs += f"Image {image_tag} built successfully"
+        except Exception as e:
+            logs += f"Error building image: {e}"
+
+        logs = logs.encode("utf-8")
+        requests.post(
+            f"{const.BACKEND_URL}/v2/archives/env/",
+            data={
+                "env": data.get("id"),
+                "name": log_filename,
             },
+            files={"file": (log_filename, BytesIO(logs))},
         )
-        print(f"Image {image_tag} built successfully", flush=True)
 
     thread = threading.Thread(target=build_image)
     thread.start()

@@ -2,6 +2,10 @@ FROM ${python_image}
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN pip install requests
 
 COPY . .
