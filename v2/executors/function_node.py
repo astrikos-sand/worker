@@ -4,6 +4,53 @@ from v2.executors.base import Base
 import config.const as const
 
 
+class FunctionImport:
+    def __init__(self, func_path, func_refer: "FunctionNode"):
+        self.func_path = func_path
+        self.func_refer = func_refer
+        self.function = self.get_function()
+        self.code_text = self.get_code()
+
+    def get_function(self):
+        response = requests.get(f"{const.BACKEND_URL}/v2/functions/p/?path={self.func_path}")
+        response.raise_for_status()
+        return response.json()
+    
+    def get_code(self):
+        code_url = self.url
+        if const.DEBUG:
+            media_part = self.url.split("/media/")[1]
+            code_url = f"{const.BACKEND_URL}/media/{media_part}"
+
+        return self.func_refer.read_online_file(code_url)
+    
+    @property
+    def url(self):
+        return self.function.get("code")
+    
+    def __call__(self, *args, **kwargs):
+        globals = {
+            "_get_global": self.func_refer.get_global,
+            "_set_global": self.func_refer.set_global,
+            "_globals": self.func_refer.get_globals,
+            "_BACKEND_URL": const.BACKEND_URL,
+            "_NODE_ID": self.func_refer.node.id,
+            "_FLOW_ID": self.func_refer.flow.get("id"),
+            "_logger": self.func_refer.logger,
+            "_import_func": FunctionImport,
+        }
+        locals = kwargs
+        exec(self.code_text, globals, locals)
+        fields = self.function.get("fields")
+        output = {}
+
+        for field in fields:
+            if field.get("attachment_type") == "OUT" and field.get("name") in locals:
+                output.update({field.get("name"): locals.get(field.get("name"))})
+
+        return output
+
+
 class FunctionNode(Base):
     def logger(self, *messages, error=False):
         for message in messages:
@@ -45,6 +92,7 @@ class FunctionNode(Base):
             "_NODE_ID": self.node.id,
             "_FLOW_ID": self.flow.get("id"),
             "_logger": self.logger,
+            "_import_func": lambda path: FunctionImport(path, self),
         }
         locals = self.inputs
         exec(code_text, globals, locals)
