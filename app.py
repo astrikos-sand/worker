@@ -45,9 +45,9 @@ def start_notebook():
         client = docker.DockerClient(base_url=f"unix://{DOCKER_SOCKET_PATH}")
         serialized_data = json.dumps(data)
         command = [
-            "python",
-            "note.py",
-            f"{data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
+            "sh",
+            "-c",
+            f"python v2_task.py && python note.py {data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
         ]
         image = f"{name}-{id}"
 
