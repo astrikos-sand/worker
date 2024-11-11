@@ -38,6 +38,7 @@ class FunctionImport:
             "_FLOW_ID": self.func_refer.flow.get("id"),
             "_logger": self.func_refer.logger,
             "_import_func": FunctionImport,
+            "_get_abspath": self.func_refer.get_abspath,
         }
         locals = kwargs
         exec(self.code_text, globals, locals)
@@ -71,6 +72,14 @@ class FunctionNode(Base):
         with self.global_dict.get("lock"):
             self.global_dict.get("globals").update({key: value})
 
+    def get_abspath(self, path):
+        import os
+
+        flow_id = self.flow.get("id")[:8]
+        dir = f"/app/media/notebooks/{flow_id}"
+        os.makedirs(dir, exist_ok=True)
+        return os.path.join(dir, path)
+
     def execute_code(self):
         code = self.node.dict.get("definition").get("code", None)
         if code is None:
@@ -93,6 +102,7 @@ class FunctionNode(Base):
             "_FLOW_ID": self.flow.get("id"),
             "_logger": self.logger,
             "_import_func": lambda path: FunctionImport(path, self),
+            "_get_abspath": self.get_abspath,
         }
         locals = self.inputs
         exec(code_text, globals, locals)

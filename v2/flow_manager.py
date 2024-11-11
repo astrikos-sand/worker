@@ -14,7 +14,7 @@ class FlowManager:
         self.nodes = copy.deepcopy(nodes)
         self.inputs = copy.deepcopy(inputs)
         self.flow = copy.deepcopy(flow)
-        self.execution_id: str = kwargs.get("execution_id")
+        self.execution_id: str = kwargs.get("execution_id", None)
 
         self.outputs = {}
         self.start_nodes = []
@@ -156,7 +156,9 @@ class FlowManager:
                 self.futures.append(future)
 
         self.flow_logger("Flow Execution Completed")
-        self.save_logs()
+
+        if self.execution_id is not None:
+            self.save_logs()
 
     def save_logs(self):
         import requests

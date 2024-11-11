@@ -17,6 +17,8 @@ def task_handler(data):
     )
     flow_manager.manage()
 
+    return flow_manager
+
 
 if __name__ == "__main__":
     load_dotenv()
