@@ -47,7 +47,7 @@ def start_notebook():
         command = [
             "sh",
             "-c",
-            f"python v2_task.py && python note.py {data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
+            f"pip install jupyter-server && python v2_task.py && python note.py {data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
         ]
         image = f"{name}-{id}"
 
@@ -95,7 +95,7 @@ def start_notebook():
                     "host.docker.internal": "host-gateway",
                 },
                 ports={
-                    "8888/tcp": 9300,
+                    "8888/tcp": 9510,
                 },
                 mounts=[
                     {
