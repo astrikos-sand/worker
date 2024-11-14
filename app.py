@@ -379,7 +379,7 @@ def create_environment():
         dockerfile_content = template.substitute(
             download_url=download_url,
             download_script=json.dumps(script_content),
-            python_image="python:3.10-bookworm",
+            python_image="default-astrikos-env",
         )
 
     image_tag = f"{name}-{id}"
@@ -414,7 +414,6 @@ def create_environment():
                 fileobj=tar_stream,
                 tag=image_tag,
                 rm=True,
-                pull=True,
                 custom_context=True,
                 extra_hosts={
                     "host.docker.internal": "host-gateway",
