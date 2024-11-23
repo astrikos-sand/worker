@@ -97,13 +97,6 @@ def start_notebook():
                 ports={
                     "8888/tcp": 9510,
                 },
-                mounts=[
-                    {
-                        "source": "astrikos_worker_executors",
-                        "target": "/app/media",
-                        "type": "volume",
-                    }
-                ],
             )
 
             client.api.put_archive(container.id, "/app/", tarstream)
