@@ -47,7 +47,7 @@ def start_notebook():
         command = [
             "sh",
             "-c",
-            f"pip install jupyter-server && python v2_task.py && python note.py {data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
+            f"python note.py {data.get('flow').get('id')[:8]}-{data.get('flow').get('name')}",
         ]
         image = f"{name}-{id}"
 
@@ -217,6 +217,13 @@ def handle_v2_task():
                     extra_hosts={
                         "host.docker.internal": "host-gateway",
                     },
+                    mounts=[
+                        {
+                            "source": "astrikos_file_server",
+                            "target": "/app/media",
+                            "type": "volume",
+                        }
+                    ],
                 )
 
                 client.api.put_archive(container.id, "/app/", tarstream)

@@ -1,0 +1,13 @@
+services:
+  file_server:
+    container_name: astrikos_file_server
+    build: .
+    image: astrikos_file_server
+    ports:
+      - "9600:80"
+    volumes:
+      - astrikos_file_server:/usr/share/nginx/html
+
+volumes:
+  astrikos_file_server:
+    external: true
