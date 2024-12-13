@@ -29,6 +29,38 @@ class BaseNode:
 
         self.dict = node_dict
 
+        self.define_properties()
+
+    def define_properties(self):
+        if self.node_type == NODE_TYPE.FUNCTION.value:
+            from v2.executors.utils import get_data
+
+            is_input_connected = {}
+            for connection in self.connections_in:
+                to_slot_id = connection.get("to_slot")
+                name = self.input_slots_dict[to_slot_id].get("name")
+                is_input_connected[name] = True
+
+            datastore_dict: dict = self.dict.get("datastore")
+            for name, datastore in datastore_dict.items():
+                value_type = datastore.get("value_type")
+                value = datastore.get("value")
+                typecast_value = get_data(value_type, value)
+                if name not in self.inputs and not is_input_connected.get(name, False):
+                    self.inputs[name] = typecast_value
+
+    @property
+    def is_start_node(self) -> bool:
+        if len(self.input_slots) == 0:
+            return True
+
+        elif self.node_type == NODE_TYPE.FUNCTION.value:
+            if len(self.connections_in) == 0:
+                if len(self.input_slots) == len(self.dict.get("datastore").keys()):
+                    return True
+
+        return False
+
     def __str__(self) -> str:
         node_id = self.id[:7]
         match self.node_type:

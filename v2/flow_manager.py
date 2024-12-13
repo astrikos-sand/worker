@@ -116,9 +116,8 @@ class FlowManager:
             node_obj = BaseNode(node)
 
             self.nodes_dict.update({node_obj.id: node_obj})
-            slots = node_obj.input_slots
 
-            if len(slots) == 0:
+            if node_obj.is_start_node:
                 self.start_nodes.append(node_obj.id)
 
     # Manager that manages a node and its children
