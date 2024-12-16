@@ -13,6 +13,9 @@ RUN curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | tee /etc
 RUN apt-get update
 RUN ACCEPT_EULA=Y apt-get install -y msodbcsql17
 
+# Postgres
+RUN apt-get install -y libpq-dev gcc
+
 # Remove apt cache
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -21,3 +24,5 @@ RUN pip3 install --upgrade pip
 RUN pip3 install pycaret hdbscan mlflow umap bayesian-optimization 
 
 RUN pip3 install pyodbc
+
+RUN pip3 install psycopg2-binary
